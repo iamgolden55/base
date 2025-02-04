@@ -142,17 +142,17 @@ export default function MedicalReports() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-6">
       {/* Header Section */}
-      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Medical Reports</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Access and manage all medical reports in one place
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button variant="light" className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             New Report
@@ -165,19 +165,19 @@ export default function MedicalReports() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-4">
         <Card className="relative overflow-hidden">
           <CardHeader className="space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               Total Reports
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2,842</div>
+            <div className="text-lg sm:text-2xl font-bold">2,842</div>
             <p className="text-xs text-muted-foreground">
               +12% from last month
             </p>
-            <div className="absolute right-4 top-4 text-muted-foreground">
+            <div className="absolute right-2 sm:right-4 top-2 sm:top-4 text-muted-foreground">
               <FileText className="h-4 w-4" />
             </div>
           </CardContent>
@@ -185,16 +185,16 @@ export default function MedicalReports() {
 
         <Card className="relative overflow-hidden">
           <CardHeader className="space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               Pending Reviews
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">18</div>
+            <div className="text-lg sm:text-2xl font-bold">18</div>
             <p className="text-xs text-muted-foreground">
               4 urgent reviews needed
             </p>
-            <div className="absolute right-4 top-4 text-yellow-500">
+            <div className="absolute right-2 sm:right-4 top-2 sm:top-4 text-yellow-500">
               <Clock className="h-4 w-4" />
             </div>
           </CardContent>
@@ -202,16 +202,16 @@ export default function MedicalReports() {
 
         <Card className="relative overflow-hidden">
           <CardHeader className="space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               Critical Reports
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-lg sm:text-2xl font-bold">3</div>
             <p className="text-xs text-muted-foreground">
               Immediate attention required
             </p>
-            <div className="absolute right-4 top-4 text-red-500">
+            <div className="absolute right-2 sm:right-4 top-2 sm:top-4 text-red-500">
               <AlertCircle className="h-4 w-4" />
             </div>
           </CardContent>
@@ -219,16 +219,16 @@ export default function MedicalReports() {
 
         <Card className="relative overflow-hidden">
           <CardHeader className="space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               Completed Today
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
+            <div className="text-lg sm:text-2xl font-bold">24</div>
             <p className="text-xs text-muted-foreground">
               All reviews up to date
             </p>
-            <div className="absolute right-4 top-4 text-green-500">
+            <div className="absolute right-2 sm:right-4 top-2 sm:top-4 text-green-500">
               <CheckCircle2 className="h-4 w-4" />
             </div>
           </CardContent>
@@ -237,17 +237,17 @@ export default function MedicalReports() {
 
       {/* Filters Section */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg sm:text-xl">Report Filters</CardTitle>
-          <CardDescription className="text-sm">
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">Report Filters</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
             Refine your report view using the filters below
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {/* Search Input */}
             <div className="flex flex-col space-y-1.5">
-              <label className="text-sm font-medium">Search Reports</label>
+              <label className="text-xs sm:text-sm font-medium">Search Reports</label>
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -261,45 +261,41 @@ export default function MedicalReports() {
 
             {/* Report Type Select */}
             <div className="flex flex-col space-y-1.5">
-              <label className="text-sm font-medium">Report Type</label>
+              <label className="text-xs sm:text-sm font-medium">Report Type</label>
               <Select
                 placeholder="Select type"
                 selectedKeys={[selectedType]}
                 onChange={(e) => setSelectedType(e.target.value)}
-                className="w-full"
               >
                 <SelectItem key="all" value="all">All Types</SelectItem>
                 <SelectItem key="lab" value="lab">Laboratory</SelectItem>
                 <SelectItem key="imaging" value="imaging">Imaging</SelectItem>
                 <SelectItem key="clinical" value="clinical">Clinical</SelectItem>
                 <SelectItem key="surgery" value="surgery">Surgery</SelectItem>
-                <SelectItem key="progress" value="progress">Progress Notes</SelectItem>
               </Select>
             </div>
 
             {/* Status Select */}
             <div className="flex flex-col space-y-1.5">
-              <label className="text-sm font-medium">Status</label>
+              <label className="text-xs sm:text-sm font-medium">Status</label>
               <Select
                 placeholder="Select status"
                 selectedKeys={[selectedStatus]}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full"
               >
-                <SelectItem key="all" value="all">All Statuses</SelectItem>
+                <SelectItem key="all" value="all">All Status</SelectItem>
                 <SelectItem key="complete" value="complete">Complete</SelectItem>
                 <SelectItem key="pending" value="pending">Pending</SelectItem>
                 <SelectItem key="in-review" value="in-review">In Review</SelectItem>
               </Select>
             </div>
 
-            {/* Date Range Picker */}
+            {/* Date Range */}
             <div className="flex flex-col space-y-1.5">
-              <label className="text-sm font-medium">Date Range</label>
-              <DateRangePicker 
+              <label className="text-xs sm:text-sm font-medium">Date Range</label>
+              <DateRangePicker
                 date={dateRange}
-                onChange={(date) => date && setDateRange(date)}
-                className="w-full"
+                onChange={(date) => setDateRange(date)}
               />
             </div>
           </div>
@@ -308,25 +304,25 @@ export default function MedicalReports() {
 
       {/* Reports Table */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg sm:text-xl">Recent Reports</CardTitle>
-          <CardDescription className="text-sm">
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">Recent Reports</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
             View and manage your most recent medical reports
           </CardDescription>
         </CardHeader>
-        <CardContent className="overflow-auto">
-          <div className="w-full overflow-x-auto">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px]">Report ID</TableHead>
+                  <TableHead className="w-[90px] sm:w-[100px]">ID</TableHead>
                   <TableHead>Title</TableHead>
                   <TableHead className="hidden sm:table-cell">Type</TableHead>
                   <TableHead className="hidden sm:table-cell">Date</TableHead>
                   <TableHead className="hidden md:table-cell">Doctor</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="hidden sm:table-cell">Priority</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="w-[60px] sm:w-[80px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -334,25 +330,33 @@ export default function MedicalReports() {
                   const TypeIcon = getReportTypeIcon(report.type)
                   return (
                     <TableRow key={report.id}>
-                      <TableCell className="font-medium">{report.id}</TableCell>
+                      <TableCell className="font-medium text-xs sm:text-sm">
+                        {report.id}
+                      </TableCell>
                       <TableCell>
-                        <div className="flex items-center">
-                          <TypeIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                          <span className="line-clamp-1">{report.title}</span>
+                        <div className="flex items-center gap-2">
+                          <TypeIcon className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs sm:text-sm line-clamp-1">
+                            {report.title}
+                          </span>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell">{report.type}</TableCell>
-                      <TableCell className="hidden sm:table-cell">
+                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
+                        {report.type}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
                         {new Date(report.date).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">{report.doctor}</TableCell>
+                      <TableCell className="hidden md:table-cell text-xs sm:text-sm">
+                        {report.doctor}
+                      </TableCell>
                       <TableCell>
-                        <Badge className={getStatusBadge(report.status)}>
+                        <Badge className={`${getStatusBadge(report.status)} text-xs`}>
                           {report.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        <Badge className={getPriorityBadge(report.priority)}>
+                        <Badge className={`${getPriorityBadge(report.priority)} text-xs`}>
                           {report.priority}
                         </Badge>
                       </TableCell>
@@ -363,6 +367,7 @@ export default function MedicalReports() {
                               variant="light" 
                               isIconOnly
                               size="sm"
+                              className="h-8 w-8"
                             >
                               <ChevronDown className="h-4 w-4" />
                             </Button>
@@ -372,7 +377,7 @@ export default function MedicalReports() {
                               key="view"
                               startContent={<Eye className="h-4 w-4" />}
                             >
-                              View Report
+                              View
                             </DropdownItem>
                             <DropdownItem
                               key="download"
