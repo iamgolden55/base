@@ -180,29 +180,28 @@ const SAMPLE_RESOURCES: MedicalResource[] = [
   ];
 const ResourceCard = ({ resource }: { resource: MedicalResource }) => (
   <Card className="hover:shadow-lg transition-shadow">
-    <CardContent className="p-6">
-      <div className="flex items-start justify-between">
+    <CardContent className="p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
         <div className="space-y-1">
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-semibold">{resource.title}</h3>
             <Badge 
               variant={resource.evidenceLevel === 'LEVEL_1' ? 'default' : 'secondary'}
-              className="ml-2"
             >
               {MEDICAL_SPECIALTIES[resource.specialty].name}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">{resource.description}</p>
         </div>
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-1 sm:ml-4">
           <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
           <span className="text-sm font-medium">{resource.rating}</span>
           <span className="text-sm text-muted-foreground">/5.0</span>
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+      <div className="mt-4 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
           <div className="flex items-center">
             <Clock className="mr-1 h-4 w-4" />
             {new Date(resource.lastUpdated).toLocaleDateString()}
@@ -219,18 +218,18 @@ const ResourceCard = ({ resource }: { resource: MedicalResource }) => (
           )}
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap gap-2">
           {resource.downloadable && (
-            <Button variant="outline" size="sm" className="h-8">
+            <Button variant="outline" size="sm" className="h-8 flex-1 sm:flex-none">
               <Download className="mr-2 h-4 w-4" />
-              Download {resource.fileType}
+              <span className="hidden sm:inline">Download</span> {resource.fileType}
             </Button>
           )}
-          <Button variant="outline" size="sm" className="h-8">
+          <Button variant="outline" size="sm" className="h-8 flex-1 sm:flex-none">
             <ExternalLink className="mr-2 h-4 w-4" />
-            View Source
+            <span className="hidden sm:inline">View</span> Source
           </Button>
-          <Button variant="outline" size="sm" className="h-8">
+          <Button variant="outline" size="sm" className="h-8 flex-1 sm:flex-none">
             <Share2 className="mr-2 h-4 w-4" />
             Share
           </Button>
@@ -268,10 +267,10 @@ const CategoryCard = ({
       className="hover:bg-accent cursor-pointer transition-colors" 
       onClick={() => onSelect(category)}
     >
-      <CardContent className="p-6">
-        <div className="flex items-center space-x-4">
-          <div className="bg-primary/10 p-3 rounded-lg">
-            <Icon className="h-6 w-6 text-primary" />
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-start space-x-4">
+          <div className="bg-primary/10 p-2 sm:p-3 rounded-lg shrink-0">
+            <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
           </div>
           <div>
             <h3 className="font-medium">{title}</h3>
@@ -350,48 +349,45 @@ export default function Resources({ type = 'guidelines' }: ResourcesProps) {
   })
 
   return (
-    <div className="p-6"> 
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Medical Resources</h2>
-        <p className="text-muted-foreground">
-          Access clinical guidelines, protocols, research materials and research videos
-        </p>
-      </div>
+    <div className="p-4 sm:p-6"> 
+      <div className="space-y-4 sm:space-y-6">
+        {/* Header Section */}
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Medical Resources</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Access clinical guidelines, protocols, research materials and research videos
+          </p>
+        </div>
         
-        
-
-        {type === 'research' && ( // Check if the current type is 'research'
-        <Card>
+        {type === 'research' && (
+          <Card className="w-full">
             <CardHeader>
-            <CardTitle>Health A to Z </CardTitle>
-            <CardDescription>
-            <blockquote className="mt-6 border-l-2 pl-6 italic">
-            <p className="text-5l font-light tracking-tight">This resources is provided from the NHS Healthcare United Kingdom. You can use the Health A to Z to access information on over 850 medical conditions directly. Please engage with the <Link href="#" className="text-blue-500">Terms and conditions</Link> outlined.</p>
-            </blockquote>
-            </CardDescription>
-            <CardContent className="space-y-4">
-                <Separator />
-                <div style={{ width: '100%', maxWidth: '1000px', borderRadius: '8px', overflow: 'hidden' }}>
-                    <iframe 
-                    title="NHS.UK Health A to Z widget" 
-                    src="https://developer.api.nhs.uk/widgets/conditions?uid=261352f0-ba2d-11ef-b7b2-f5810bf97bf0" 
-                    style={{ 
-                        border: 'solid 1px #ccc', 
-                        width: '100%', 
-                        height: '100%', 
-                        aspectRatio: '16 / 9' 
-                    }} 
-                    ></iframe>
-                </div>
-                </CardContent>
+              <CardTitle>Health A to Z</CardTitle>
+              <CardDescription>
+                <blockquote className="mt-4 border-l-2 pl-4">
+                  <p className="text-sm sm:text-base font-light tracking-tight">
+                    This resource is provided from the NHS Healthcare United Kingdom. You can use the Health A to Z to access information on over 850 medical conditions directly. Please engage with the <Link href="#" className="text-blue-500">Terms and conditions</Link> outlined.
+                  </p>
+                </blockquote>
+              </CardDescription>
             </CardHeader>
-        </Card>
+            <CardContent className="p-0 sm:p-6">
+              <div className="w-full h-[600px] sm:h-[500px] relative rounded-lg overflow-hidden">
+                <iframe 
+                  title="NHS.UK Health A to Z widget" 
+                  src="https://developer.api.nhs.uk/widgets/conditions?uid=261352f0-ba2d-11ef-b7b2-f5810bf97bf0" 
+                  className="w-full h-full border border-gray-200"
+                  style={{ 
+                    minHeight: '500px',
+                    aspectRatio: 'auto'
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
         )}
 
-
-    {type === 'videos' ? (
+        {type === 'videos' ? (
             <HealthVideoLibrary />
             ) : (
             <>
@@ -400,13 +396,13 @@ export default function Resources({ type = 'guidelines' }: ResourcesProps) {
         <CardHeader>
           <CardTitle>Search Resources</CardTitle>
           <CardDescription>
-          <blockquote className="mt-6 border-l-2 pl-6">
-          <p className="text-5l font-light tracking-tight">The resources provided are fully vetted and approved by medical professionals, ensuring they meet the highest standards of accuracy and reliability. Each resource has undergone thorough review and validation, making it a trusted tool for research, clinical consultations, and educational purposes. Rest assured, all materials adhere to established medical guidelines and are designed to support evidence-based practices. Please make reference to the <Link href="#" className="text-blue-500">Terms and conditions</Link> outlined.</p>
+          <blockquote className="mt-4 sm:mt-6 border-l-2 pl-4 sm:pl-6">
+          <p className="text-sm sm:text-base font-light tracking-tight">The resources provided are fully vetted and approved by medical professionals, ensuring they meet the highest standards of accuracy and reliability. Each resource has undergone thorough review and validation, making it a trusted tool for research, clinical consultations, and educational purposes. Rest assured, all materials adhere to established medical guidelines and are designed to support evidence-based practices. Please make reference to the <Link href="#" className="text-blue-500">Terms and conditions</Link> outlined.</p>
           </blockquote>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -451,7 +447,7 @@ export default function Resources({ type = 'guidelines' }: ResourcesProps) {
               </SelectContent>
             </Select>
 
-            <Button variant="outline">
+            <Button variant="outline" className="w-full">
               <Filter className="mr-2 h-4 w-4" />
               More Filters
             </Button>
@@ -460,7 +456,7 @@ export default function Resources({ type = 'guidelines' }: ResourcesProps) {
       </Card>
 
       {/* Quick Access Categories */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {QUICK_ACCESS_CATEGORIES.map((category, index) => (
             <CategoryCard 
             key={index} 

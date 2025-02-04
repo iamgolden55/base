@@ -102,11 +102,11 @@ const QuickStatCard = ({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <CardTitle className="text-xs sm:text-sm font-medium truncate">{title}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-lg sm:text-2xl font-bold">{value}</div>
         <p className={`text-xs ${trendColor} flex items-center gap-1`}>
           <span>{trendIcon}</span>
           {change} from last period
@@ -180,90 +180,96 @@ export default function AnalyticsDashboard() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-6">
       {/* Header and Filters */}
-      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:space-y-0">
+      <div className="flex flex-col space-y-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Analytics & Insights</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Analytics & Insights</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Comprehensive analysis of patient care and practice metrics
           </p>
         </div>
         
-        <div className="flex flex-col space-y-2 sm:flex-row sm:space-x-2 sm:space-y-0">
-          <DateRangePicker
-            date={dateRange}
-            onChange={handleDateRangeChange}
-          />
-          
-          <Select
-            defaultValue="all"
-            onValueChange={(value: MetricType) => handleMetricChange(value)}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select metric" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Metrics</SelectItem>
-              <SelectItem value="patients">Patients</SelectItem>
-              <SelectItem value="outcomes">Outcomes</SelectItem>
-              <SelectItem value="revenue">Revenue</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <DateRangePicker
+              date={dateRange}
+              onChange={handleDateRangeChange}
+              className="w-full"
+            />
+            
+            <Select
+              defaultValue="all"
+              onValueChange={(value: MetricType) => handleMetricChange(value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select metric" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Metrics</SelectItem>
+                <SelectItem value="patients">Patients</SelectItem>
+                <SelectItem value="outcomes">Outcomes</SelectItem>
+                <SelectItem value="revenue">Revenue</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Button 
-            onClick={handleExport}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Exporting...
-              </>
-            ) : (
-              <>
-                <FileText className="mr-2 h-4 w-4" />
-                Export Report
-              </>
-            )}
-          </Button>
+            <Button 
+              onClick={handleExport}
+              disabled={isLoading}
+              className="w-full"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <span className="hidden sm:inline">Exporting...</span>
+                  <span className="sm:hidden">Export</span>
+                </>
+              ) : (
+                <>
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">Export Report</span>
+                  <span className="sm:hidden">Export</span>
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* AI Insights */}
       <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-xl">
             <Brain className="h-5 w-5 text-blue-500" />
             AI-Powered Insights
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs sm:text-sm">
             Real-time analysis and predictions based on your practice data
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div className="flex items-center gap-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
-              <Bot className="h-8 w-8 text-purple-500" />
+        <CardContent className="p-4 sm:p-6">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="flex items-center gap-4 rounded-lg bg-white p-3 sm:p-4 shadow-sm dark:bg-gray-800">
+              <Bot className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500" />
               <div>
-                <p className="font-medium">Patient Risk Analysis</p>
-                <p className="text-sm text-muted-foreground">3 high-risk patients identified</p>
+                <p className="text-sm sm:text-base font-medium">Patient Risk Analysis</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">3 high-risk patients identified</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
-              <Sparkles className="h-8 w-8 text-yellow-500" />
+            <div className="flex items-center gap-4 rounded-lg bg-white p-3 sm:p-4 shadow-sm dark:bg-gray-800">
+              <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500" />
               <div>
-                <p className="font-medium">Treatment Optimization</p>
-                <p className="text-sm text-muted-foreground">2 care plan suggestions available</p>
+                <p className="text-sm sm:text-base font-medium">Treatment Optimization</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">2 care plan suggestions available</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
-              <Zap className="h-8 w-8 text-green-500" />
+            <div className="flex items-center gap-4 rounded-lg bg-white p-3 sm:p-4 shadow-sm dark:bg-gray-800">
+              <Zap className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
               <div>
-                <p className="font-medium">Predictive Analytics</p>
-                <p className="text-sm text-muted-foreground">85% accuracy in readmission predictions</p>
+                <p className="text-sm sm:text-base font-medium">Predictive Analytics</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">85% accuracy in readmission predictions</p>
               </div>
             </div>
           </div>
@@ -272,28 +278,30 @@ export default function AnalyticsDashboard() {
 
       {/* Analytics Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="overview" className="flex gap-2">
-            <Activity className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="patients" className="flex gap-2">
-            <Users className="h-4 w-4" />
-            Patient Analytics
-          </TabsTrigger>
-          <TabsTrigger value="clinical" className="flex gap-2">
-            <Stethoscope className="h-4 w-4" />
-            Clinical Outcomes
-          </TabsTrigger>
-          <TabsTrigger value="efficiency" className="flex gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Practice Efficiency
-          </TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto">
+          <TabsList className="w-full sm:w-auto inline-flex whitespace-nowrap">
+            <TabsTrigger value="overview" className="flex gap-2">
+              <Activity className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="patients" className="flex gap-2">
+              <Users className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Patient Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="clinical" className="flex gap-2">
+              <Stethoscope className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Clinical Outcomes</span>
+            </TabsTrigger>
+            <TabsTrigger value="efficiency" className="flex gap-2">
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Practice Efficiency</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="overview" className="space-y-4">
           {/* Quick Stats */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-4">
             <QuickStatCard
               title="Total Patients"
               value="1,284"
@@ -325,21 +333,21 @@ export default function AnalyticsDashboard() {
           </div>
 
           {/* Charts */}
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
             <Card>
-              <CardHeader>
-                <CardTitle>Patient Trends</CardTitle>
-                <CardDescription>Monthly patient visit distribution</CardDescription>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-base sm:text-lg">Patient Trends</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Monthly patient visit distribution</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
+              <CardContent className="p-0 sm:p-6">
+                <div className="h-[250px] sm:h-[300px] w-full p-2">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={patientTrendData}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
+                      <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 12 }} />
                       <Tooltip />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: '12px' }} />
                       <Line 
                         type="monotone" 
                         dataKey="newPatients" 
@@ -368,20 +376,20 @@ export default function AnalyticsDashboard() {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Health Outcomes</CardTitle>
-                <CardDescription>Treatment effectiveness analysis</CardDescription>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-base sm:text-lg">Health Outcomes</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Treatment effectiveness analysis</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
+              <CardContent className="p-0 sm:p-6">
+                <div className="h-[250px] sm:h-[300px] w-full p-2">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={healthOutcomesData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
+                        innerRadius={45}
+                        outerRadius={65}
                         paddingAngle={5}
                         dataKey="value"
                       >
@@ -394,7 +402,7 @@ export default function AnalyticsDashboard() {
                         ))}
                       </Pie>
                       <Tooltip />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: '12px' }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
