@@ -142,22 +142,22 @@ export default function MedicalReports() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header Section */}
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Medical Reports</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Medical Reports</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Access and manage all medical reports in one place
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Button variant="outline">
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <Button variant="light" className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             New Report
           </Button>
-          <Button>
+          <Button className="w-full sm:w-auto">
             <Download className="mr-2 h-4 w-4" />
             Export Reports
           </Button>
@@ -165,7 +165,7 @@ export default function MedicalReports() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="relative overflow-hidden">
           <CardHeader className="space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -238,164 +238,169 @@ export default function MedicalReports() {
       {/* Filters Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Report Filters</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg sm:text-xl">Report Filters</CardTitle>
+          <CardDescription className="text-sm">
             Refine your report view using the filters below
           </CardDescription>
         </CardHeader>
         <CardContent>
-
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {/* Search Input */}
             <div className="flex flex-col space-y-1.5">
-                <label className="text-sm font-medium">Search Reports</label>
-                <div className="relative">
+              <label className="text-sm font-medium">Search Reports</label>
+              <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                    placeholder="Search by ID, title, or doctor..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by ID, title, or doctor..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                </div>
+              </div>
             </div>
 
             {/* Report Type Select */}
             <div className="flex flex-col space-y-1.5">
-                <label className="text-sm font-medium">Report Type</label>
-                <Select
+              <label className="text-sm font-medium">Report Type</label>
+              <Select
                 placeholder="Select type"
                 selectedKeys={[selectedType]}
                 onChange={(e) => setSelectedType(e.target.value)}
-                >
+                className="w-full"
+              >
                 <SelectItem key="all" value="all">All Types</SelectItem>
                 <SelectItem key="lab" value="lab">Laboratory</SelectItem>
                 <SelectItem key="imaging" value="imaging">Imaging</SelectItem>
                 <SelectItem key="clinical" value="clinical">Clinical</SelectItem>
                 <SelectItem key="surgery" value="surgery">Surgery</SelectItem>
                 <SelectItem key="progress" value="progress">Progress Notes</SelectItem>
-                </Select>
+              </Select>
             </div>
 
             {/* Status Select */}
             <div className="flex flex-col space-y-1.5">
-                <label className="text-sm font-medium">Status</label>
-                <Select
+              <label className="text-sm font-medium">Status</label>
+              <Select
                 placeholder="Select status"
                 selectedKeys={[selectedStatus]}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                >
+                className="w-full"
+              >
                 <SelectItem key="all" value="all">All Statuses</SelectItem>
                 <SelectItem key="complete" value="complete">Complete</SelectItem>
                 <SelectItem key="pending" value="pending">Pending</SelectItem>
                 <SelectItem key="in-review" value="in-review">In Review</SelectItem>
-                </Select>
+              </Select>
             </div>
 
             {/* Date Range Picker */}
             <div className="flex flex-col space-y-1.5">
-                <label className="text-sm font-medium">Date Range</label>
-                <DateRangePicker 
-                    date={dateRange}
-                    onChange={(date) => date && setDateRange(date)}
-                    className="w-full"
-                />
-                </div>
+              <label className="text-sm font-medium">Date Range</label>
+              <DateRangePicker 
+                date={dateRange}
+                onChange={(date) => date && setDateRange(date)}
+                className="w-full"
+              />
             </div>
+          </div>
         </CardContent>
       </Card>
 
       {/* Reports Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Reports</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg sm:text-xl">Recent Reports</CardTitle>
+          <CardDescription className="text-sm">
             View and manage your most recent medical reports
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Report ID</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Doctor</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentReports.map((report) => {
-                const TypeIcon = getReportTypeIcon(report.type)
-                return (
-                  <TableRow key={report.id}>
-                    <TableCell className="font-medium">{report.id}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <TypeIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {report.title}
-                      </div>
-                    </TableCell>
-                    <TableCell>{report.type}</TableCell>
-                    <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
-                    <TableCell>{report.doctor}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusBadge(report.status)}>
-                        {report.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getPriorityBadge(report.priority)}>
-                        {report.priority}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                    <Dropdown>
-                        <DropdownTrigger>
-                        <Button 
-                            variant="light" 
-                            isIconOnly
-                            size="sm"
-                        >
-                            <ChevronDown className="h-4 w-4" />
-                        </Button>
-                        </DropdownTrigger>
-                        <DropdownMenu aria-label="Report actions">
-                        <DropdownItem
-                            key="view"
-                            startContent={<Eye className="h-4 w-4" />}
-                        >
-                            View Report
-                        </DropdownItem>
-                        <DropdownItem
-                            key="download"
-                            startContent={<Download className="h-4 w-4" />}
-                        >
-                            Download
-                        </DropdownItem>
-                        <DropdownItem
-                            key="share"
-                            startContent={<Share2 className="h-4 w-4" />}
-                        >
-                            Share
-                        </DropdownItem>
-                        <DropdownItem
-                            key="print"
-                            startContent={<Printer className="h-4 w-4" />}
-                        >
-                            Print
-                        </DropdownItem>
-                        </DropdownMenu>
-                    </Dropdown>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+        <CardContent className="overflow-auto">
+          <div className="w-full overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[100px]">Report ID</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead className="hidden sm:table-cell">Type</TableHead>
+                  <TableHead className="hidden sm:table-cell">Date</TableHead>
+                  <TableHead className="hidden md:table-cell">Doctor</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="hidden sm:table-cell">Priority</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentReports.map((report) => {
+                  const TypeIcon = getReportTypeIcon(report.type)
+                  return (
+                    <TableRow key={report.id}>
+                      <TableCell className="font-medium">{report.id}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <TypeIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <span className="line-clamp-1">{report.title}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">{report.type}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {new Date(report.date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">{report.doctor}</TableCell>
+                      <TableCell>
+                        <Badge className={getStatusBadge(report.status)}>
+                          {report.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge className={getPriorityBadge(report.priority)}>
+                          {report.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Dropdown>
+                          <DropdownTrigger>
+                            <Button 
+                              variant="light" 
+                              isIconOnly
+                              size="sm"
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                            </Button>
+                          </DropdownTrigger>
+                          <DropdownMenu aria-label="Report actions">
+                            <DropdownItem
+                              key="view"
+                              startContent={<Eye className="h-4 w-4" />}
+                            >
+                              View Report
+                            </DropdownItem>
+                            <DropdownItem
+                              key="download"
+                              startContent={<Download className="h-4 w-4" />}
+                            >
+                              Download
+                            </DropdownItem>
+                            <DropdownItem
+                              key="share"
+                              startContent={<Share2 className="h-4 w-4" />}
+                            >
+                              Share
+                            </DropdownItem>
+                            <DropdownItem
+                              key="print"
+                              startContent={<Printer className="h-4 w-4" />}
+                            >
+                              Print
+                            </DropdownItem>
+                          </DropdownMenu>
+                        </Dropdown>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

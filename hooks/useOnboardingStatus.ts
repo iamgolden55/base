@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 
 export const useOnboardingStatus = () => {
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(true) // Default to true to prevent flash
+  // Initialize with false to ensure onboarding shows by default
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
