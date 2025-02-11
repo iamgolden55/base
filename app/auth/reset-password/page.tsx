@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { useState, Suspense } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import axios from '@/lib/axios'
 
 import {
@@ -59,10 +59,9 @@ export default function ResetPasswordPreview() {
 }
 
 function ResetPasswordContent() {
+  const { token } = useTokenParams(); // ✅ Hook moved inside child component
   const [isLoading, setIsLoading] = useState(false)
-  const searchParams = useSearchParams()  // Moved inside child component
   const router = useRouter()
-  const token = searchParams.get('token')
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -177,4 +176,10 @@ function ResetPasswordContent() {
       </Card>
     </div>
   )
+}
+
+// ✅ This is the correct way to use `useSearchParams()` inside `<Suspense>`
+function useTokenParams() {
+  const searchParams = useSearchParams();
+  return { token: searchParams.get('token') };
 }
