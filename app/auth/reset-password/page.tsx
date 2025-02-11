@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import axios from '@/lib/axios'
 
@@ -87,81 +87,87 @@ export default function ResetPasswordPreview() {
   }
 
   return (
-    <div className="flex min-h-[50vh] h-full w-full items-center justify-center px-4">
-      <Card className="mx-auto max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">Reset Password</CardTitle>
-          <CardDescription>
-            Enter your new password to reset your password.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <div className="grid gap-4">
-                {/* New Password Field */}
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem className="grid gap-2">
-                      <FormLabel htmlFor="password">New Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          id="password"
-                          placeholder="******"
-                          autoComplete="new-password"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+    <Suspense fallback={
+      <div className="flex min-h-[50vh] h-full w-full items-center justify-center px-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      </div>
+    }>
+      <div className="flex min-h-[50vh] h-full w-full items-center justify-center px-4">
+        <Card className="mx-auto max-w-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl">Reset Password</CardTitle>
+            <CardDescription>
+              Enter your new password to reset your password.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <div className="grid gap-4">
+                  {/* New Password Field */}
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem className="grid gap-2">
+                        <FormLabel htmlFor="password">New Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            id="password"
+                            placeholder="******"
+                            autoComplete="new-password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                {/* Confirm Password Field */}
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem className="grid gap-2">
-                      <FormLabel htmlFor="confirmPassword">
-                        Confirm Password
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          id="confirmPassword"
-                          placeholder="******"
-                          autoComplete="new-password"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  {/* Confirm Password Field */}
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem className="grid gap-2">
+                        <FormLabel htmlFor="confirmPassword">
+                          Confirm Password
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            id="confirmPassword"
+                            placeholder="******"
+                            autoComplete="new-password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <Button 
-                  type="submit" 
-                  className="bg-blue-500 hover:bg-blue-600 w-full" 
-                  disabled={isLoading}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    {isLoading && <Spinner size="sm" color="white" />}
-                    <span>{isLoading ? "Resetting..." : "Reset Password"}</span>
-                  </div>
-                </Button>
-                <p className="text-center text-sm text-muted-foreground">
-                  <Link href="/auth/login" className="underline underline-offset-4 hover:text-primary flex items-center gap-2">
-                    <MoveLeft className="w-4 h-4" />
-                    Back to Login
-                  </Link>
-                </p>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+                  <Button 
+                    type="submit" 
+                    className="bg-blue-500 hover:bg-blue-600 w-full" 
+                    disabled={isLoading}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      {isLoading && <Spinner size="sm" color="white" />}
+                      <span>{isLoading ? "Resetting..." : "Reset Password"}</span>
+                    </div>
+                  </Button>
+                  <p className="text-center text-sm text-muted-foreground">
+                    <Link href="/auth/login" className="underline underline-offset-4 hover:text-primary flex items-center gap-2">
+                      <MoveLeft className="w-4 h-4" />
+                      Back to Login
+                    </Link>
+                  </p>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
+    </Suspense>
   )
 }
