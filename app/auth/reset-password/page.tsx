@@ -4,8 +4,8 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import { useState, Suspense } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import axios from '@/lib/axios'
 
 import {
@@ -28,7 +28,6 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from "@nextui-org/react"
 import Link from 'next/link'
 import { MoveLeft } from 'lucide-react'
-
 // Schema for password validation
 const formSchema = z
   .object({
@@ -47,21 +46,10 @@ const formSchema = z
   })
 
 export default function ResetPasswordPreview() {
-  return (
-    <Suspense fallback={
-      <div className="flex min-h-[50vh] h-full w-full items-center justify-center px-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-      </div>
-    }>
-      <ResetPasswordContent />
-    </Suspense>
-  )
-}
-
-function ResetPasswordContent() {
-  const { token } = useTokenParams(); // ✅ Hook moved inside child component
   const [isLoading, setIsLoading] = useState(false)
+  const searchParams = useSearchParams()
   const router = useRouter()
+  const token = searchParams.get('token')
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -178,8 +166,3 @@ function ResetPasswordContent() {
   )
 }
 
-// ✅ This is the correct way to use `useSearchParams()` inside `<Suspense>`
-function useTokenParams() {
-  const searchParams = useSearchParams();
-  return { token: searchParams.get('token') };
-}
