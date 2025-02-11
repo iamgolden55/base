@@ -13,10 +13,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Spinner } from "@nextui-org/react"
-import axios from "@/lib/axios" // Import our configured axios instance
-import { toast } from "sonner" // For error notifications
-import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/lib/constants"
-
+import { toast } from "sonner"
+import axios from "axios"; // We'll use axios directly first to debug
+import { jwtDecode } from "jwt-decode";
+import { DecodedToken } from '@/app/types/auth';
 export function LoginForm({
   className,
   ...props
@@ -27,38 +27,53 @@ export function LoginForm({
     password: ''
   });
 
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value
-    });
-  };
-
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     try {
-      const response = await axios.post('/api/token/', {
+      const response = await axios.post('http://127.0.0.1:8000/api/login/', {
         email: formData.email,
         password: formData.password
       });
+  
+      if (response.data.require_otp) {
+        sessionStorage.setItem('userEmail', formData.email);
+        window.location.href = '/auth/verify';
+      } else if (response.data.tokens) {
+        // First, let's test the token structure
+        console.log('Full response:', response.data);
+        const token = response.data.tokens.access;
+        const decodedTest = jwtDecode(token);
+        console.log('Decoded token:', decodedTest);
 
-      // Store tokens
-      localStorage.setItem(ACCESS_TOKEN_KEY, response.data.access);
-      localStorage.setItem(REFRESH_TOKEN_KEY, response.data.refresh);
-
-      // Redirect to dashboard
-      window.location.href = '/dashboard';
-    } catch (error: any) {
-      // Handle specific error cases
-      if (error.response?.status === 401) {
-        toast.error('Invalid email or password');
-      } else if (!error.response) {
-        toast.error('Network error. Please try again.');
+        // Add type assertion here
+        const decodedToken = jwtDecode<DecodedToken>(response.data.tokens.access);
+        localStorage.setItem('access_token', response.data.tokens.access);
+        localStorage.setItem('refresh_token', response.data.tokens.refresh);
+  
+        // Set onboarding status
+        if (decodedToken.user_data?.basic_info?.has_completed_onboarding) {
+          localStorage.setItem('hasCompletedOnboarding', 'true');
+        } else {
+          localStorage.setItem('hasCompletedOnboarding', 'false');
+        }
+  
+        // Redirect based on onboarding status
+        window.location.href = decodedToken.user_data?.basic_info?.has_completed_onboarding 
+          ? '/role/patient'
+          : '/role/patient/onboarding';
+      }
+    }catch (error: any) {
+      console.error('Login error:', error);
+      if (error.response) {
+        // Server responded with an error
+        toast.error(error.response.data.message || 'Login failed. Please try again.');
+      } else if (error.request) {
+        // Request was made but no response
+        toast.error('No response from server. Please try again.');
       } else {
+        // Something else went wrong
         toast.error('An error occurred. Please try again.');
       }
     } finally {
@@ -73,12 +88,20 @@ export function LoginForm({
       // Implement social login logic here
       const response = await axios.post(`/api/social/${provider}/`);
       // Handle successful authentication
-      window.location.href = '/dashboard';
+      window.location.href = '/role/patient';
     } catch (error) {
       toast.error(`${provider} login failed. Please try again.`);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
   };
 
   return (

@@ -4,15 +4,17 @@ import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from './constants';
 
 // Create axios instance
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true  // Add this line
 });
 
 // Add request interceptor
 axiosInstance.interceptors.request.use(
   async (config) => {
+    console.log("Request config:", config);
     const token = localStorage.getItem(ACCESS_TOKEN_KEY);
     
     if (token) {

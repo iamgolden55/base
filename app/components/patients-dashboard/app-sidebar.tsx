@@ -107,12 +107,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
       {
         title: "Settings",
-        url: "#",
+        url: `/${role}/patient/settings`,
         icon: Settings2,
         items: [
-          { title: "Profile", url: "#" },
-          { title: "Preferences", url: "#" },
-          { title: "Notifications", url: "#" },
+          { title: "Profile", url: `/${role}/patient/settings` },
+          { title: "Preferences", url: `/${role}/patient/settings?tab=security` },
+          { title: "Notifications", url: `/${role}/patient/settings?tab=notifications` },
         ],
       },
       {

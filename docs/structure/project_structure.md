@@ -24,10 +24,25 @@
 - **README.md**: Project's README file.
 - **.env.local**: Environment variables file.
 
-## app/ Directory
-- **app/**: Contains application-specific components and pages.
-- **components/**: Contains reusable UI components.
-- **lib/**: Contains utility functions and libraries (axios-doc.md, constants.ts, utils.ts).
-- **hooks/**: Contains custom React hooks (useOnboardingStatus.ts, useRole.ts, use-toast.ts, use-mobile.ts).
+## app/ Directory Structure
 
-This documentation provides an overview of the project's structure, which can be used for future reference and onboarding new developers. 
+- **app/**
+  - **auth/** - Authentication related pages (login, register, forgot-password, reset-password)
+  - **[role]/** - Dynamic route based on user role (admin, doctor, nurse, etc.). The square brackets indicate a dynamic segment in the route that changes based on the user's role
+  - **api/** - API route handlers for server-side functionality
+  - **components/** - Reusable UI components specific to pages
+  - **lib/** - Utility functions, configurations, and shared libraries
+    - axios.ts
+    - constants.ts
+    - utils.ts
+  - **hooks/** - Custom React hooks
+    - useOnboardingStatus.ts
+    - useRole.ts
+    - use-toast.ts
+    - use-mobile.ts
+  - **styles/** - Global styles and CSS modules
+  - **types/** - TypeScript type definitions and interfaces
+  - **layout.tsx** - Root layout component
+  - **page.tsx** - Root page component
+
+Note: The [role] directory uses Next.js dynamic routing to handle different user roles and their respective access levels within the application.

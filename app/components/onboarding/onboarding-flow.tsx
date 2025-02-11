@@ -1,55 +1,70 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ProgressDots } from "./progress-dots"
 import { OnboardingCard } from "./onboarding-card"
 import { useOnboardingStatus } from "@/hooks/useOnboardingStatus"
 import { useRouter } from "next/navigation"
 import { useRole } from '@/hooks/useRole'
+import { jwtDecode } from "jwt-decode"
+import { ACCESS_TOKEN_KEY } from "@/lib/constants"
+import axiosInstance from "@/lib/axios"
 
-const ONBOARDING_STEPS = [
-  {
-    title: "Welcome to TripWell!",
-    description:
-      "Planning your dream vacation shouldn't be a headache. TripWell simplifies the process by letting you manage all aspects of your trip - flights, hotels, and activities - in one convenient place",
-    imageSrc:
-      "/images/7191136_3568982.svg",
-    imageAlt: "Beach waves illustration",
-  },
-  {
-    title: "Effortless Trip Planning.",
-    description:
-      "Forget juggling multiple apps and websites. Our intuitive interface makes planning the perfect itinerary a breeze, so you can spend less time organizing and more time dreaming about your adventure",
-    imageSrc:
-      "/images/8354609_3877677.svg",
-    imageAlt: "Map with location markers",
-  },
-  {
-    title: "Never Miss a Beat",
-    description:
-      "Having everything at your fingertips gives you peace of mind. TripWell keeps your entire itinerary neatly organized, including flight confirmations, hotel bookings, and activity tickets.",
-    imageSrc:
-      "/images/cold.svg",
-    imageAlt: "Hot air balloon over mountains",
-  },
-]
+
+
+
+interface DecodedToken {
+  user?: {
+    role?: string;
+    email?: string;
+    full_name?: string;
+    // ... other user properties
+  };
+  exp?: number;
+  iat?: number;
+}
 
 export function OnboardingFlow() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const { completeOnboarding } = useOnboardingStatus()
-  const router = useRouter()
-  const role = useRole()
+  const [currentStep, setCurrentStep] = useState(0);
+  const { completeOnboarding } = useOnboardingStatus();
+  const router = useRouter();
+  const userData = useRole();
+
+  const ONBOARDING_STEPS = [
+    {
+      title: `Welcome${userData?.basic_info?.full_name ? `, ${userData.basic_info.full_name}` : ''}!`,
+      description:
+        "Planning your dream vacation shouldn't be a headache. TripWell simplifies the process by letting you manage all aspects of your trip - flights, hotels, and activities - in one convenient place",
+      imageSrc:
+        "/images/7191136_3568982.svg",
+      imageAlt: "Beach waves illustration",
+    },
+    {
+      title: "Effortless Trip Planning.",
+      description:
+        "Forget juggling multiple apps and websites. Our intuitive interface makes planning the perfect itinerary a breeze, so you can spend less time organizing and more time dreaming about your adventure",
+      imageSrc:
+        "/images/8354609_3877677.svg",
+      imageAlt: "Map with location markers",
+    },
+    {
+      title: "Never Miss a Beat",
+      description:
+        "Having everything at your fingertips gives you peace of mind. TripWell keeps your entire itinerary neatly organized, including flight confirmations, hotel bookings, and activity tickets.",
+      imageSrc:
+        "/images/cold.svg",
+      imageAlt: "Hot air balloon over mountains",
+    },
+  ]
 
   const handleNext = () => {
     if (currentStep < ONBOARDING_STEPS.length - 1) {
-      setCurrentStep((prev) => prev + 1)
+      setCurrentStep((prev) => prev + 1);
     } else {
-      // On last step, complete onboarding and redirect
-      completeOnboarding()
-      router.replace(`/${role}/patient`)
+      handleComplete();  // Call this when onboarding is complete
     }
-  }
+  };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
@@ -61,9 +76,21 @@ export function OnboardingFlow() {
     setCurrentStep(ONBOARDING_STEPS.length - 1)
   }
 
-  const handleComplete = () => {
-    // Add any additional onboarding completion logic here
-    completeOnboarding()
+  const handleComplete = async () => {
+    try {
+      // Update backend
+      await axiosInstance.post('/api/onboarding/update/', {
+        has_completed_onboarding: true
+      });
+      
+      // Update localStorage
+      completeOnboarding();  // This sets localStorage
+      
+      // Redirect to patient dashboard
+      router.replace('/role/patient');
+    } catch (error) {
+      console.error('Failed to update onboarding status:', error);
+    }
   }
 
   return (

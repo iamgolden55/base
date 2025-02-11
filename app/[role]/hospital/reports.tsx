@@ -295,10 +295,10 @@ export default function MedicalReports() {
             {/* Date Range Picker */}
             <div className="flex flex-col space-y-1.5">
                 <label className="text-sm font-medium">Date Range</label>
-                <DateRangePicker 
-                    date={dateRange}
-                    onChange={(date) => date && setDateRange(date)}
-                    className="w-full"
+                <DateRangePicker
+                  date={dateRange}
+                  onChange={(date) => date && setDateRange({ from: date.from, to: date.to || date.from })}
+                  className="w-full"
                 />
                 </div>
             </div>

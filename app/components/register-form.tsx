@@ -1,6 +1,8 @@
 'use client';
 
 import { cn } from "@/lib/utils"
+import axiosInstance from "@/lib/axios"
+import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/lib/constants"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -32,21 +34,16 @@ import {
 } from "@/components/ui/select"
 
 interface RegisterFormData {
-  // Step 1 data
   fullName: string;
   email: string;
   gender: string;
   phone: string;
   password: string;
-  
-  // Step 2 data
-  dateOfBirth: string;
+  date_of_birth: string;
   country: string;
   state: string;
   city: string;
-  nin?: string; // Optional, only for Nigerian users
-  
-  // Step 3 data
+  nin?: string;
   consents: {
     terms: boolean;
     hipaa: boolean;
@@ -60,96 +57,97 @@ export function RegisterForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const [date, setDate] = useState<Date>();
-  const [dateInput, setDateInput] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [gender, setGender] = useState("");
-  const [consents, setConsents] = useState({
-    terms: false,
-    hipaa: false,
-    dataProcessing: false
+  const [formData, setFormData] = useState<RegisterFormData>({
+    fullName: '',
+    email: '',
+    gender: '',
+    phone: '',
+    password: '',
+    date_of_birth: '',
+    country: '',
+    state: '',
+    city: '',
+    consents: {
+      terms: false,
+      hipaa: false,
+      dataProcessing: false
+    }
   });
-  const [country, setCountry] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showNIN, setShowNIN] = useState(false);
+
+  const handleInputChange = (field: keyof RegisterFormData, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleConsentChange = (consentType: keyof typeof formData.consents, value: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      consents: {
+        ...prev.consents,
+        [consentType]: value
+      }
+    }));
+  };
+
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      const formattedDate = date.toISOString().split('T')[0];
+      handleInputChange('date_of_birth', formattedDate);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check if all consents are accepted
-    if (!Object.values(consents).every(Boolean)) {
-      alert("Please accept all required agreements to continue");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      const formData: RegisterFormData = {
-        // Step 1 data
-        fullName: (document.getElementById('name') as HTMLInputElement).value,
-        email: (document.getElementById('email') as HTMLInputElement).value,
-        gender: gender,
-        phone: phone,
-        password: password,
-        
-        // Step 2 data
-        dateOfBirth: date ? date.toISOString().split('T')[0] : '',
-        country: country,
-        state: (document.getElementById('state') as HTMLInputElement).value,
-        city: (document.getElementById('city') as HTMLInputElement).value,
-        ...(showNIN && { nin: (document.getElementById('nin') as HTMLInputElement).value }),
-        
-        // Step 3 data
-        consents: consents
-      };
-
-      // Send data to backend
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Registration failed');
-      }
-
-      const data = await response.json();
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       
-      // Handle successful registration
-      // For example, redirect to login page or dashboard
-      window.location.href = '/auth/login';
+      // Prepare the data for the backend
+      const registrationData = {
+        ...formData,
+        full_name: formData.fullName.trim(), // Send fullName as full_name
+        fullName: undefined, // Remove the frontend field
+      };
+      
+      console.log('Sending registration data:', registrationData);
+      const response = await axiosInstance.post(`${apiUrl}api/registration/`, registrationData);
+      console.log('Registration response:', response);
 
-    } catch (error) {
+      if (response.data) {
+        if (response.data.access && response.data.refresh) {
+          localStorage.setItem(ACCESS_TOKEN_KEY, response.data.access);
+          localStorage.setItem(REFRESH_TOKEN_KEY, response.data.refresh);
+        }
+        window.location.href = '/auth/login';
+      }
+    } catch (error: any) {
       console.error('Registration error:', error);
-      alert('Registration failed. Please try again.');
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        console.error('Server error:', errorData);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCalendarChange = (
-    _value: string | number,
-    _e: React.ChangeEventHandler<HTMLSelectElement>,
-  ) => {
-    const _event = {
-      target: {
-        value: String(_value),
-      },
-    } as React.ChangeEvent<HTMLSelectElement>;
-    _e(_event);
-  };
-
-  const calculateAge = (birthDate: Date) => {
+  const calculateAge = (birthDate: string) => {
     const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
     
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
       age--;
     }
     
@@ -164,6 +162,8 @@ export function RegisterForm({
           id="name"
           placeholder="John Doe"
           required
+          value={formData.fullName}
+          onChange={(e) => handleInputChange('fullName', e.target.value)}
         />
       </div>
       <div className="grid gap-2">
@@ -173,6 +173,8 @@ export function RegisterForm({
           type="email"
           placeholder="john@example.com"
           required
+          value={formData.email}
+          onChange={(e) => handleInputChange('email', e.target.value)}
         />
       </div>
       <div className="grid gap-2">
@@ -183,8 +185,8 @@ export function RegisterForm({
               type="radio"
               name="gender"
               value="male"
-              checked={gender === "male"}
-              onChange={(e) => setGender(e.target.value)}
+              checked={formData.gender === "male"}
+              onChange={(e) => handleInputChange('gender', e.target.value)}
               className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
               required
             />
@@ -195,8 +197,8 @@ export function RegisterForm({
               type="radio"
               name="gender"
               value="female"
-              checked={gender === "female"}
-              onChange={(e) => setGender(e.target.value)}
+              checked={formData.gender === "female"}
+              onChange={(e) => handleInputChange('gender', e.target.value)}
               className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
               required
             />
@@ -207,8 +209,8 @@ export function RegisterForm({
               type="radio"
               name="gender"
               value="other"
-              checked={gender === "other"}
-              onChange={(e) => setGender(e.target.value)}
+              checked={formData.gender === "other"}
+              onChange={(e) => handleInputChange('gender', e.target.value)}
               className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
               required
             />
@@ -219,8 +221,8 @@ export function RegisterForm({
       <div className="grid gap-2">
         <Label htmlFor="phone">Phone Number</Label>
         <PhoneInputComponent
-          value={phone}
-          onChange={setPhone}
+          value={formData.phone}
+          onChange={(value) => handleInputChange('phone', value)}
           required
           label="Phone Number"
           defaultCountry="NG"
@@ -229,8 +231,8 @@ export function RegisterForm({
       </div>
       <div className="grid gap-2">
         <PasswordInput
-          value={password}
-          onChange={setPassword}
+          value={formData.password}
+          onChange={(e) => handleInputChange('password', e)}
           required
           showStrengthIndicator={true}
         />
@@ -246,10 +248,10 @@ export function RegisterForm({
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             className={cn(
-              confirmPassword && password !== confirmPassword && "border-red-500 focus:ring-red-500"
+              confirmPassword && formData.password !== confirmPassword && "border-red-500 focus:ring-red-500"
             )}
           />
-          {confirmPassword && password !== confirmPassword && (
+          {confirmPassword && formData.password !== confirmPassword && (
             <p className="mt-1 text-xs text-red-500">Passwords do not match</p>
           )}
         </div>
@@ -258,7 +260,7 @@ export function RegisterForm({
         type="button" 
         className="w-full bg-blue-500 hover:bg-blue-600"
         onClick={() => setStep(2)}
-        disabled={!password || !confirmPassword || password !== confirmPassword}
+        disabled={!formData.password || !confirmPassword || formData.password !== confirmPassword}
       >
         Continue
       </Button>
@@ -276,12 +278,12 @@ export function RegisterForm({
           min="1900-01-01"
           required
           className="w-full"
-          value={date ? date.toISOString().split('T')[0] : ''}
-          onChange={(e) => setDate(e.target.value ? new Date(e.target.value) : undefined)}
+          value={formData.date_of_birth}
+          onChange={(e) => handleInputChange('date_of_birth', e.target.value)}
         />
-        {date && (
+        {formData.date_of_birth && (
           <p className="text-xs text-muted-foreground">
-            Age: {calculateAge(date)} years old
+            Age: {calculateAge(formData.date_of_birth)} years old
           </p>
         )}
       </div>
@@ -291,14 +293,11 @@ export function RegisterForm({
           id="country"
           placeholder="Nigeria"
           required
-          value={country}
+          value={formData.country}
           onChange={(e) => {
             const inputValue = e.target.value;
-            console.log('Country input:', inputValue); // Debug log
-            setCountry(inputValue);
-            const isNigeria = inputValue.trim().toLowerCase() === 'nigeria';
-            console.log('Is Nigeria:', isNigeria); // Debug log
-            setShowNIN(isNigeria);
+            handleInputChange('country', inputValue);
+            setShowNIN(inputValue.trim().toLowerCase() === 'nigeria');
           }}
         />
       </div>
@@ -308,6 +307,8 @@ export function RegisterForm({
           id="state"
           required
           placeholder="Lagos"
+          value={formData.state}
+          onChange={(e) => handleInputChange('state', e.target.value)}
         />
       </div>
       <div className="grid gap-2">
@@ -316,6 +317,8 @@ export function RegisterForm({
           id="city"
           placeholder="Ikeja"
           required
+          value={formData.city}
+          onChange={(e) => handleInputChange('city', e.target.value)}
         />
       </div>
       {showNIN && (
@@ -329,13 +332,10 @@ export function RegisterForm({
             maxLength={11}
             minLength={11}
             title="Please enter a valid 11-digit NIN number"
+            value={formData.nin}
             onChange={(e) => {
-              // Only allow numbers
-              e.target.value = e.target.value.replace(/[^0-9]/g, '');
-              // Limit to 11 digits
-              if (e.target.value.length > 11) {
-                e.target.value = e.target.value.slice(0, 11);
-              }
+              const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 11);
+              handleInputChange('nin', value);
             }}
           />
           <p className="text-xs text-muted-foreground">
@@ -368,8 +368,8 @@ export function RegisterForm({
         <div className="flex items-start space-x-3">
           <Checkbox
             isRequired
-            isSelected={consents.terms}
-            onValueChange={(checked) => setConsents(prev => ({ ...prev, terms: checked }))}
+            isSelected={formData.consents.terms}
+            onValueChange={(checked) => handleConsentChange('terms', checked)}
           >
             <div className="grid gap-1.5 leading-none">
               <span className="text-sm font-medium flex items-center">
@@ -385,8 +385,8 @@ export function RegisterForm({
         <div className="flex items-start space-x-3">
           <Checkbox
             isRequired
-            isSelected={consents.hipaa}
-            onValueChange={(checked) => setConsents(prev => ({ ...prev, hipaa: checked }))}
+            isSelected={formData.consents.hipaa}
+            onValueChange={(checked) => handleConsentChange('hipaa', checked)}
           >
             <div className="grid gap-1.5 leading-none">
               <span className="text-sm font-medium flex items-center">
@@ -402,8 +402,8 @@ export function RegisterForm({
         <div className="flex items-start space-x-3">
           <Checkbox
             isRequired
-            isSelected={consents.dataProcessing}
-            onValueChange={(checked) => setConsents(prev => ({ ...prev, dataProcessing: checked }))}
+            isSelected={formData.consents.dataProcessing}
+            onValueChange={(checked) => handleConsentChange('dataProcessing', checked)}
           >
             <div className="grid gap-1.5 leading-none">
               <span className="text-sm font-medium flex items-center">
@@ -417,7 +417,7 @@ export function RegisterForm({
           </Checkbox>
         </div>
       </div>
-      {!Object.values(consents).every(Boolean) && (
+      {!Object.values(formData.consents).every(Boolean) && (
         <p className="text-sm text-red-500">
           * All agreements are required to create an account
         </p>
@@ -433,7 +433,7 @@ export function RegisterForm({
         <Button 
           type="submit" 
           className="flex-1 bg-blue-500 hover:bg-blue-600 w-full"
-          disabled={isLoading || !Object.values(consents).every(Boolean)}
+          disabled={isLoading || !Object.values(formData.consents).every(Boolean)}
         >
           <div className="flex items-center justify-center gap-2">
             {isLoading && <Spinner size="sm" color="white" />}
@@ -478,5 +478,5 @@ export function RegisterForm({
         </a>
       </div>
     </div>
-  )
+  );
 }

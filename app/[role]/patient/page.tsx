@@ -1,3 +1,5 @@
+// app/[role]/patient/page.tsx
+
 "use client"
 
 import { motion } from "framer-motion"
@@ -10,26 +12,41 @@ import TicketSelector from "@/app/[role]/patient/ticket-selector"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { useRole } from "@/hooks/useRole"
+import { jwtDecode } from "jwt-decode"
+import { ACCESS_TOKEN_KEY } from "@/lib/constants"
+import { logout } from '@/lib/utils';
+
+
 
 export default function DashboardPage() {
-  const { hasCompletedOnboarding, isLoading } = useOnboardingStatus()
-  const router = useRouter()
+  const { hasCompletedOnboarding, isLoading } = useOnboardingStatus();
+  const router = useRouter();
+  const userData = useRole();
 
   useEffect(() => {
-    // Simple redirect if onboarding is not completed
-    if (!isLoading && !hasCompletedOnboarding) {
-      router.replace('/role/patient/onboarding')
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (!token) {
+      router.replace('/auth/login');
+      return;
     }
-  }, [hasCompletedOnboarding, isLoading, router])
 
-  // Show loading state while checking
-  if (isLoading || !hasCompletedOnboarding) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Spinner size="lg" />
-      </div>
-    )
+    if (!isLoading && !hasCompletedOnboarding) {
+      router.replace('/role/patient/onboarding');
+      return;
+    }
+  }, [hasCompletedOnboarding, isLoading, router]);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">
+      <Spinner size="lg" />
+    </div>;
   }
+
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    logout();
+  };
 
   // Dashboard content
   return (
@@ -47,13 +64,13 @@ export default function DashboardPage() {
       >
         <Alert
           color="warning"
-          description="Upgrade to a paid plan to continue"
+          description={`Hello ${userData?.basic_info?.full_name}, Please note you are not registered as a patient yet. Please contact your GP to register.`}
           endContent={
             <Button color="warning" size="sm" variant="flat">
               Upgrade
             </Button>
           }
-          title="You have no credits left"
+          
           variant="faded"
         />
       </motion.div>

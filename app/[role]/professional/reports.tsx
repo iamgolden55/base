@@ -295,7 +295,7 @@ export default function MedicalReports() {
               <label className="text-xs sm:text-sm font-medium">Date Range</label>
               <DateRangePicker
                 date={dateRange}
-                onChange={(date) => setDateRange(date)}
+                onChange={(date) => date && setDateRange({ from: date.from, to: date.to || date.from })}
               />
             </div>
           </div>

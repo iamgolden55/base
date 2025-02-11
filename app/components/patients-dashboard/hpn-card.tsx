@@ -6,8 +6,13 @@ import { Info } from "lucide-react";
 import { GraduationCap } from "lucide-react";
 import Image from "next/image"
 import TicketSelector from "@/app/[role]/patient/ticket-selector";
+import { useRole } from '@/hooks/useRole';
+import { toast } from 'sonner';
+import { Copy } from 'lucide-react'
 
 const HpnCard = () => {
+  const userData = useRole();
+
   return (
     <Card className="w-full bg-white dark:bg-gray-100 shadow-[0_3px_10px_rgb(0,0,0,0.2)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-shadow duration-200 rounded-3xl overflow-hidden dark:border-gray-100 relative">
       {/* Desktop-only decorative SVG */}
@@ -24,6 +29,12 @@ const HpnCard = () => {
       <CardContent className="p-6 relative z-10">
         <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Health Summary</h2>
         <div className="grid gap-6">
+        <h2 className="text-3xl font-semibold">
+          <span className="bg-gradient-to-r from-blue-600 to-cyan-600 text-transparent bg-clip-text">
+          {userData?.basic_info?.full_name}
+          </span>
+        </h2>
+          
           {/* HPN Section with Tooltip */}
           <div className="relative">
             <div className="flex items-center gap-2 mb-2">
@@ -60,14 +71,17 @@ const HpnCard = () => {
             </div>
             <div className="flex items-center gap-4">
               <div className="font-mono text-2xl font-bold tracking-wider bg-gradient-to-r from-blue-600 to-cyan-600 text-transparent bg-clip-text">
-                DEL 234 665 21356
+              {userData?.basic_info?.hpn || 'Loading...'}
               </div>
               <button 
                 className="text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-full transition-colors"
                 onClick={() => {
-                  navigator.clipboard.writeText('DEL 234 665 21356');
-                }}  
+                  navigator.clipboard.writeText(userData?.basic_info?.hpn || '');
+                  toast.success('HPN copied to clipboard');
+                }}
+                aria-label="Copy HPN to clipboard"
               >
+                <Copy className="h-4 w-4" />
               </button>
             </div>
             <p className="text-5l font-light tracking-tight">
@@ -96,7 +110,7 @@ const HpnCard = () => {
                   return age;
                 };
 
-                const age = calculateAge('1990-01-01');
+                const age = calculateAge(userData?.basic_info?.date_of_birth || '');
                 
                 type AgeCategory = {
                   range: string;
