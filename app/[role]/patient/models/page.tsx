@@ -14,7 +14,7 @@ import { SuggestionButton } from "@/components/ui/suggestion-button";
 import { Loader2, ArrowUp, Copy, RefreshCw, ThumbsUp, ThumbsDown } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-
+import { Spinner } from "@nextui-org/spinner";
 interface Message {
   id: string;
   content: string;
@@ -77,6 +77,12 @@ export default function AIChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [copiedMap, setCopiedMap] = useState<Record<string, boolean>>({});
   const [feedbackMap, setFeedbackMap] = useState<Record<string, 'positive' | 'negative' | null>>({});
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">
+      <Spinner size="lg" />
+    </div>;
+  }
 
   // Function to smoothly scroll to the latest message
   const scrollToBottom = () => {
