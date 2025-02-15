@@ -131,7 +131,7 @@ function PatientHeader() {
           </Avatar>
           <div className="flex-1 text-center sm:text-left">
             <div className="flex flex-col sm:flex-row items-center sm:items-baseline gap-2 sm:gap-4 mb-2">
-              <h1 className="text-2xl sm:text-3xl font-bold">{userData?.basic_info?.full_name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-light">{userData?.basic_info?.full_name}</h1>
               <Badge variant="outline" className="text-sm">
                 <CheckCircle className="w-4 h-4 mr-1" /> Active Patient
               </Badge>
@@ -139,7 +139,7 @@ function PatientHeader() {
             <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
               <div className="flex items-center gap-1 sm:gap-2">
                 <CalendarDays className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
-                <span>DOB: 03/15/1992</span>
+                <span>DOB: {userData?.basic_info?.date_of_birth}</span>
               </div>
               <div className="flex items-center gap-1 sm:gap-2">
                 <Droplet className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
