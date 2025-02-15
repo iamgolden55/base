@@ -3,7 +3,7 @@
 import { useState, useEffect, useId } from "react"
 import { format } from "date-fns"
 import { Alert, Button } from "@nextui-org/react"
-import { MapModal } from "./components/map-modal"
+
 
 export default function Appointments() {
   const id = useId()
@@ -60,7 +60,7 @@ export default function Appointments() {
 
         {/* Rest of your existing component code */}
 
-        <MapModal open={showMap} onOpenChange={setShowMap} />
+        
       </div>
     </>
   )

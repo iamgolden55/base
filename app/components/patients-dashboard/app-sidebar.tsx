@@ -15,6 +15,7 @@ import {
   Footprints,
   Calendar,
   TvMinimalPlay,
+  ClipboardMinus,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useCallback, useState } from "react"
@@ -85,6 +86,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Appointments",
         url: `/${role}/patient/appointments`, // Add leading slash
         icon: Calendar,
+      },
+      {
+        title: "Medical Records",
+        url: `/${role}/patient/medical-records`,
+        icon: ClipboardMinus,
       },
       {
         title: "Models",
