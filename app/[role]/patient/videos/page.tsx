@@ -32,12 +32,12 @@ export default function VideosPage() {
 
   return (
     <div className="flex flex-col w-full relative">
-      {/* Hero Section */}
+      {/* Hero Section with Skeleton */}
       <Suspense fallback={<VideoSkeleton />}>
         <VideoHero />
       </Suspense>
 
-      {/* Video Categories */}
+      {/* Video Categories with Skeletons */}
       <div className="space-y-8 pb-8 pt-6">
         <Suspense fallback={<VideoSkeleton />}>
           <VideoRow 

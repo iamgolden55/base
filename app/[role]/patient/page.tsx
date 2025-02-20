@@ -16,6 +16,9 @@ import { useRole } from "@/hooks/useRole"
 import { jwtDecode } from "jwt-decode"
 import { ACCESS_TOKEN_KEY } from "@/lib/constants"
 import { logout } from '@/lib/utils';
+import Infograph from "@/app/components/patients-dashboard/infograph";
+import { DecodedToken } from "@/app/types/auth";
+
 
 
 
@@ -83,10 +86,18 @@ export default function DashboardPage() {
         <HpnCard />
       </motion.div>
 
-      <motion.div 
+      <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4 }}
+      >
+        <Infograph />
+      </motion.div>
+
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.5 }}
         className="grid auto-rows-min gap-4 md:grid-cols-3"
       >
         <Card className="first-letter:w-full bg-white dark:bg-gray-100 shadow-[0_3px_5px_rgb(0,0,0,0.2)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-shadow duration-200 rounded-3xl overflow-hidden dark:border-gray-100 relative">

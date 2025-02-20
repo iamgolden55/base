@@ -17,6 +17,8 @@ import { toast } from "sonner"
 import axios from "axios"; // We'll use axios directly first to debug
 import { jwtDecode } from "jwt-decode";
 import { DecodedToken } from '@/app/types/auth';
+import axiosInstance from "@/lib/axios";
+
 export function LoginForm({
   className,
   ...props
@@ -32,7 +34,7 @@ export function LoginForm({
     setIsLoading(true);
   
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/login/', {
+      const response = await axiosInstance.post('/api/login/', {
         email: formData.email,
         password: formData.password
       });
@@ -60,9 +62,10 @@ export function LoginForm({
         }
   
         // Redirect based on onboarding status
+        const role = decodedToken.user_data?.basic_info?.role || 'role';
         window.location.href = decodedToken.user_data?.basic_info?.has_completed_onboarding 
-          ? '/role/patient'
-          : '/role/patient/onboarding';
+          ? `/role/patient`
+          : `/role/patient/onboarding`;
       }
     }catch (error: any) {
       console.error('Login error:', error);
@@ -105,6 +108,7 @@ export function LoginForm({
   };
 
   return (
+    
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
@@ -232,5 +236,6 @@ export function LoginForm({
         and <a href="/privacy">Privacy Policy</a>.
       </div>
     </div>
+    
   )
 }

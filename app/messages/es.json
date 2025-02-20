@@ -1,0 +1,17 @@
+{
+  "common": {
+    "welcome": "Bienvenido de nuevo",
+    "login": "Iniciar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "dontHaveAccount": "¿No tienes una cuenta?",
+    "signUp": "Registrarse"
+  },
+  "dashboard": {
+    "healthSummary": "Resumen de Salud",
+    "hpn": "Número de Punto de Salud (HPN)",
+    "profileStatus": "Estado del Perfil",
+    "lastUpdated": "Última actualización"
+  }
+} 

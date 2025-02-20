@@ -3,12 +3,9 @@ export default function OnboardingLayout({
 }: {
   children: React.ReactNode
 }) {
-  // This completely replaces any parent layouts
   return (
-    <html lang="en">
-      <body>
-        {children}
-      </body>
-    </html>
+    <div className="min-h-screen">
+      {children}
+    </div>
   )
 } 

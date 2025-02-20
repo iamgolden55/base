@@ -1,459 +1,484 @@
-'use client';
+"use client"
 
-import { useState, useRef, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/components/ui/use-toast";
-import { motion } from 'framer-motion';
-import { cn } from "@/lib/utils";
-import Image from "next/image";
-import { Sparkles } from "lucide-react";
-import { SuggestionButton } from "@/components/ui/suggestion-button";
-import { Loader2, ArrowUp, Copy, RefreshCw, ThumbsUp, ThumbsDown } from "lucide-react";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Spinner } from "@nextui-org/spinner";
+import { useState, useRef, useEffect } from "react"
+import { Card } from "@/components/ui/card"
+import { Button } from "@heroui/react"
+import { Icons } from "@/app/components/ui/icons"
+import { Avatar } from "@heroui/react"
+import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
+import { Trash, Send, Plus, Bot, Copy, RefreshCcw, ThumbsUp, ThumbsDown, FileText, Image, X, File } from "lucide-react"
+import { Spinner } from "@heroui/react"
+
 interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant';
-  timestamp: Date;
-  images?: string[];
-  text: string;
-  sender: 'user' | 'assistant';
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+  feedback?: 'like' | 'dislike'
+  attachments?: Array<{
+    type: 'image' | 'pdf' | 'doc'
+    url: string
+    name: string
+  }>
 }
 
-// Animated loading indicator component for AI thinking state
-const LoadingDots = () => (
-  <div className="flex items-center gap-1">
-    {/* First dot with animation */}
-    <motion.span
-      className="h-1.5 w-1.5 bg-primary/40 rounded-full"
-      animate={{ scale: [1, 1.2, 1] }} // Pulsing animation sequence
-      transition={{ duration: 1, repeat: Infinity, repeatDelay: 0.2 }} // Continuous animation with delay
-    />
-    {/* Second dot with delayed animation */}
-    <motion.span
-      className="h-1.5 w-1.5 bg-primary/40 rounded-full"
-      animate={{ scale: [1, 1.2, 1] }}
-      transition={{ duration: 1, repeat: Infinity, repeatDelay: 0.2, delay: 0.2 }} // Slight delay for wave effect
-    />
-    {/* Third dot with further delayed animation */}
-    <motion.span
-      className="h-1.5 w-1.5 bg-primary/40 rounded-full"
-      animate={{ scale: [1, 1.2, 1] }}
-      transition={{ duration: 1, repeat: Infinity, repeatDelay: 0.2, delay: 0.4 }}
-    />
-  </div>
-);
+type Attachment = {
+  type: 'image' | 'pdf' | 'doc'
+  url: string
+  name: string
+}
 
-// Add this utility function to strip markdown
-const stripMarkdown = (markdown: string) => {
-  return markdown
-    .replace(/#{1,6} /g, '')           // Remove headers
-    .replace(/\*\*/g, '')              // Remove bold
-    .replace(/\*/g, '')                // Remove italic
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')  // Replace links with text
-    .replace(/`{3}[\s\S]*?`{3}/g, '')  // Remove code blocks
-    .replace(/`/g, '')                 // Remove inline code
-    .replace(/\n\s*[-*+]\s/g, '\n• ')  // Convert list items to bullets
-    .replace(/\n\s*\d+\.\s/g, '\n• ')  // Convert numbered lists to bullets
-    .replace(/>\s/g, '')               // Remove blockquotes
-    .trim();
-};
+export default function ChatPage() {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [attachments, setAttachments] = useState<File[]>([])
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
-// Main chat interface component
-export default function AIChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
-  const [showPrompts, setShowPrompts] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [copiedMap, setCopiedMap] = useState<Record<string, boolean>>({});
-  const [feedbackMap, setFeedbackMap] = useState<Record<string, 'positive' | 'negative' | null>>({});
-  
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">
-      <Spinner size="lg" />
-    </div>;
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  // Function to smoothly scroll to the latest message
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // Auto-scroll effect when messages array updates
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    scrollToBottom()
+  }, [messages])
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if ((!input.trim() && attachments.length === 0) || isLoading) return
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content: inputMessage,
-      role: 'user',
-      timestamp: new Date(),
-      text: inputMessage,
-      sender: 'user',
-    };
-
-    try {
-      setIsLoading(true);
-      setMessages(prev => [...prev, newMessage]);
-      setInputMessage('');
-
-      // TODO: Implement API call to AI service
-      // const response = await axios.post('/api/chat', { message: inputMessage });
+    // Create an array of attachment promises
+    const attachmentPromises = attachments.map(async (file) => {
+      // For images, create a proper preview URL
+      if (file.type.includes('image')) {
+        return new Promise<Attachment>((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            resolve({
+              type: 'image',
+              url: reader.result as string,
+              name: file.name
+            })
+          }
+          reader.readAsDataURL(file)
+        })
+      }
       
-      // Simulate AI response for now
-      const aiResponse: Message = {
+      // For other files, just use the basic URL
+      return {
+        type: file.type.includes('pdf') ? 'pdf' : 'doc',
+        url: URL.createObjectURL(file),
+        name: file.name
+      } as Attachment
+    })
+
+    // Wait for all attachments to be processed
+    const processedAttachments = await Promise.all(attachmentPromises)
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: input,
+      timestamp: new Date(),
+      attachments: processedAttachments
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    setInput("")
+    setAttachments([])
+    setIsLoading(true)
+    inputRef.current?.focus()
+
+    // Simulate AI response (replace with actual API call)
+    setTimeout(() => {
+      const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `# Welcome to the Public Health Bureau
-
-## About Our Platform
-The Public Health Bureau (PHB) represents a transformative initiative in healthcare technology. Here's what we offer:
-
-### Key Features
-1. Advanced AI Integration
-2. Real-time Health Monitoring
-3. Personalized Care Plans
-
-### How It Works
-- Connect with healthcare providers
-- Access your medical records
-- Schedule appointments easily
-
-## Technical Capabilities
-\`\`\`typescript
-interface HealthSystem {
-  ai: AdvancedAI;
-  monitoring: RealTime;
-  records: SecureStorage;
-}
-\`\`\`
-
-> Important: Your health data is always encrypted and secure.
-
-For more information, visit our [documentation](https://docs.example.com).`,
         role: 'assistant',
-        timestamp: new Date(),
-        text: `# Welcome to the Public Health Bureau
+        content: "This is a simulated response. Replace with actual LLM integration.",
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, aiMessage])
+      setIsLoading(false)
+    }, 1000)
+  }
 
-## About Our Platform
-The Public Health Bureau (PHB) represents a transformative initiative in healthcare technology. Here's what we offer:
+  const handleRegenerate = async (messageId: string) => {
+    setIsLoading(true)
+    const messageIndex = messages.findIndex(m => m.id === messageId)
+    setMessages(messages.slice(0, messageIndex))
+    
+    // Simulate regeneration (replace with actual API call)
+    setTimeout(() => {
+      const newResponse: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: "This is a regenerated response.",
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, newResponse])
+      setIsLoading(false)
+    }, 1000)
+  }
 
-### Key Features
-1. Advanced AI Integration
-2. Real-time Health Monitoring
-3. Personalized Care Plans
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const validTypes = ['image/jpeg', 'image/png', 'application/pdf', 'application/msword']
+    
+    const validFiles = files.filter(file => {
+      const isValidType = validTypes.includes(file.type)
+      const isValidSize = file.size <= 5 * 1024 * 1024 // 5MB limit
+      
+      if (!isValidType) {
+        alert(`File type ${file.type} is not supported`)
+      }
+      if (!isValidSize) {
+        alert(`File ${file.name} is too large. Maximum size is 5MB`)
+      }
+      
+      return isValidType && isValidSize
+    })
 
-### How It Works
-- Connect with healthcare providers
-- Access your medical records
-- Schedule appointments easily
+    setAttachments(prev => [...prev, ...validFiles])
+  }
 
-## Technical Capabilities
-\`\`\`typescript
-interface HealthSystem {
-  ai: AdvancedAI;
-  monitoring: RealTime;
-  records: SecureStorage;
-}
-\`\`\`
+  const handleFeedback = async (messageId: string, type: 'like' | 'dislike') => {
+    setMessages(messages.map(message => 
+      message.id === messageId 
+        ? { ...message, feedback: type }
+        : message
+    ))
+    
+    // Here you would typically send the feedback to your backend
+    console.log(`Feedback ${type} for message ${messageId}`)
+  }
 
-> Important: Your health data is always encrypted and secure.
-
-For more information, visit our [documentation](https://docs.example.com).`,
-        sender: 'assistant',
-      };
-
-      setMessages(prev => [...prev, aiResponse]);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePromptClick = (suggestion: string) => {
-    // Implementation of handlePromptClick
-  };
-
-  const handleRegenerateResponse = async (message: Message) => {
-    setIsLoading(true);
+  const handleCopy = async (content: string) => {
     try {
-      // TODO: Implement your regeneration logic here
-      const aiResponse = { ...message, id: Date.now().toString() };
-      setMessages(prev => [...prev.slice(0, -1), aiResponse]);
-      toast({
-        description: "Response regenerated",
-        duration: 2000,
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        description: "Failed to regenerate response",
-      });
-    } finally {
-      setIsLoading(false);
+      await navigator.clipboard.writeText(content)
+      // Optional: Add a toast notification here to show success
+    } catch (err) {
+      console.error('Failed to copy text:', err)
+      // Optional: Add error handling notification
     }
-  };
-
-  const handleFeedback = async (messageId: string, type: 'positive' | 'negative') => {
-    try {
-      // TODO: Implement feedback logic here
-      toast({
-        description: `${type === 'positive' ? 'Positive' : 'Negative'} feedback recorded`,
-        duration: 2000,
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        description: "Failed to record feedback",
-      });
-    }
-  };
+  }
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)] w-full">
-      {/* Header section */}
-      <div className="px-2 md:px-8 lg:px-8 py-2 w-full max-w-[85rem] mx-auto">
-        <h1 className="text-2xl md:text-3xl font-medium">AI Health Assistant</h1>
-        <p className="text-muted-foreground text-sm">Get personalized health guidance</p>
+    <div className="flex h-screen flex-col bg-gradient-to-b from-background to-background/80">
+      {/* Header */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <div className="container flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <Avatar
+              isBordered
+              color="primary"
+              src="/avatars/ai.png"
+              fallback="AI"
+              className="h-8 w-8"
+            />
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">Elera Health Assistant</h1>
+              <p className="text-sm text-muted-foreground">Always here to help</p>
+            </div>
+          </div>
+          <Button 
+            variant="flat" 
+            size="sm" 
+            className="rounded-full hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setMessages([])}
+          >
+            <Trash className="h-4 w-4 mr-2" />
+            Clear Chat
+          </Button>
+        </div>
       </div>
 
-      {/* Main chat container */}
-      <Card className="flex-1 flex flex-col w-full max-w-[85rem] mx-auto rounded-none md:rounded-lg relative bg-background/50 backdrop-blur-sm">
-        {showPrompts && (
-          <motion.div
-            className="flex flex-wrap gap-2 mb-4 w-full"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {suggestions.map((suggestion, index) => (
-              <SuggestionButton
-                key={index}
-                icon={Sparkles}
-                onClick={() => handlePromptClick(suggestion)}
+      {/* Chat Messages */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="container space-y-4 max-w-3xl mx-auto py-4">
+          <AnimatePresence>
+            {messages.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
               >
-                {suggestion}
-              </SuggestionButton>
-            ))}
-          </motion.div>
-        )}
-
-        {/* Scrollable messages area */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
-          {/* Map through and render messages */}
-          {messages.map((message) => (
-            <motion.div
-              key={message.id}
-              className={cn("flex gap-2 mb-6", 
-                message.sender === "user" ? "justify-end" : "justify-start items-start"
-              )}
-            >
-              {message.sender === "assistant" && (
-                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <Sparkles className="h-3 w-3 text-primary" />
-                </div>
-              )}
-              
-              <div
-                className={cn(
-                  "max-w-[85%] md:max-w-[75%] text-sm",
-                  message.sender === "user" 
-                    ? "bg-black/20 text-black/90 rounded-2xl rounded-br-md px-4 py-2.5 text-6l font-light tracking-tight"
-                    : "text-foreground/90 pl-4 border-l-2 border-primary/20 font-light"
-                )}
-              >
-                {message.sender === "assistant" ? (
-                  
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        h1: ({ children }) => <h1 className="text-xl font-semibold my-4">{children}</h1>,
-                        h2: ({ children }) => <h2 className="text-lg font-semibold my-3">{children}</h2>,
-                        h3: ({ children }) => <h3 className="text-md font-semibold my-2">{children}</h3>,
-                        ul: ({ children }) => <ul className="list-disc ml-4 my-2 space-y-1">{children}</ul>,
-                        ol: ({ children }) => <ol className="list-decimal ml-4 my-2 space-y-1">{children}</ol>,
-                        p: ({ children }) => <p className="my-2 leading-relaxed">{children}</p>,
-                        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                        em: ({ children }) => <em className="italic">{children}</em>,
-                        code: ({ node, inline, className, children, ...props }: any) => {
-                          if (inline) {
-                            return <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono" {...props}>{children}</code>;
-                          }
-                          return <pre className="bg-muted p-4 rounded-lg my-2 overflow-x-auto font-mono" {...props}>{children}</pre>;
-                        },
-                        table: ({ children }) => (
-                          <div className="overflow-x-auto my-4">
-                            <table className="min-w-full divide-y divide-border">{children}</table>
-                          </div>
-                        ),
-                        a: ({ href, children }) => (
-                          <a href={href} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
-                            {children}
-                          </a>
-                        ),
-                      }}
-                    >
-                      {message.text}
-                    </ReactMarkdown>
-                  
-                ) : (
-                  message.text
-                )}
-                <div className={cn(
-                  "text-[10px] mt-1",
-                  message.sender === "user" 
-                    ? "opacity-70" 
-                    : "text-muted-foreground/60"
-                )}>
-                  {message.timestamp.toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit'
-                  })}
-                </div>
-
-                {/* Action Icons */}
-                {message.sender === "assistant" && (
-                  <div className="flex gap-2 mt-2">
-                    <motion.button
-                      onClick={() => {
-                        const cleanText = stripMarkdown(message.text);
-                        
-                        navigator.clipboard.writeText(cleanText);
-                        setCopiedMap(prev => ({ ...prev, [message.id]: true }));
-                        setTimeout(() => {
-                          setCopiedMap(prev => ({ ...prev, [message.id]: false }));
-                        }, 2000);
-                        toast({
-                          description: "Message copied to clipboard",
-                          duration: 2000,
-                        });
-                      }}
-                      className={cn(
-                        "p-1 hover:bg-muted rounded-md transition-colors",
-                        copiedMap[message.id] 
-                          ? "text-green-500" 
-                          : "text-muted-foreground"
-                      )}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <Copy 
-                        className={cn(
-                          "h-3 w-3 transition-colors duration-200",
-                          copiedMap[message.id] 
-                            ? "text-green-500" 
-                            : "text-muted-foreground"
-                        )}
-                      />
-                    </motion.button>
-                    <button
-                      onClick={() => handleRegenerateResponse(message)}
-                      className="p-1 hover:bg-muted rounded-md transition-colors"
-                    >
-                      <RefreshCw className="h-3 w-3 text-muted-foreground" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleFeedback(message.id, 'positive');
-                        setFeedbackMap(prev => ({ ...prev, [message.id]: 'positive' }));
-                      }}
-                      className={cn(
-                        "p-1 hover:bg-muted rounded-md transition-colors",
-                        feedbackMap[message.id] === 'positive' && "text-green-500"
-                      )}
-                    >
-                      <ThumbsUp className="h-3 w-3" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleFeedback(message.id, 'negative');
-                        setFeedbackMap(prev => ({ ...prev, [message.id]: 'negative' }));
-                      }}
-                      className={cn(
-                        "p-1 hover:bg-muted rounded-md transition-colors",
-                        feedbackMap[message.id] === 'negative' && "text-red-500"
-                      )}
-                    >
-                      <ThumbsDown className="h-3 w-3" />
-                    </button>
+                <Card className="p-8 text-center">
+                  <Bot className="h-12 w-12 mx-auto text-muted-foreground/60" />
+                  <h2 className="mt-4 text-lg font-semibold">Welcome to Elera Health Assistant</h2>
+                  <p className="mt-2 text-muted-foreground">
+                    Ask me anything about your health concerns or medical questions.
+                  </p>
+                  <div className="mt-6 flex flex-wrap gap-2 justify-center">
+                    {["How can I improve my sleep?", "What are common cold remedies?", "Tips for reducing stress"].map((suggestion) => (
+                      <Button
+                        key={suggestion}
+                        variant="flat"
+                        size="sm"
+                        className="rounded-full"
+                        onClick={() => setInput(suggestion)}
+                      >
+                        {suggestion}
+                      </Button>
+                    ))}
                   </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
+                </Card>
+              </motion.div>
+            ) : (
+              messages.map((message) => (
+                <div key={message.id} className="space-y-2">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className={cn(
+                      "flex gap-3 max-w-[85%] p-4 rounded-2xl",
+                      message.role === 'user' 
+                        ? "ml-auto bg-primary/10" 
+                        : "bg-secondary/40"
+                    )}
+                  >
+                    <Avatar
+                      isBordered
+                      src={message.role === 'user' ? "/avatars/user.png" : "/avatars/ai.png"}
+                      fallback={message.role === 'user' ? "U" : "AI"}
+                      className={cn(
+                        "h-8 w-8",
+                        message.role === 'user' ? "bg-primary/20" : "bg-secondary"
+                      )}
+                    />
+                    <div className="flex-1 space-y-3">
+                      <p className="text-sm font-medium">
+                        {message.role === 'user' ? 'You' : 'AI Assistant'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {message.content}
+                      </p>
+                      
+                      {message.attachments && message.attachments.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {message.attachments.map((attachment, index) => (
+                            <div key={index} className="relative group">
+                              {attachment.type === 'image' ? (
+                                <div className="relative w-32 h-32 rounded-lg overflow-hidden border">
+                                  <img
+                                    src={attachment.url}
+                                    alt={attachment.name}
+                                    className="w-full h-full object-cover cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setSelectedImage(attachment.url)
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/40 border">
+                                  {attachment.type === 'pdf' ? (
+                                    <FileText className="h-4 w-4" />
+                                  ) : (
+                                    <File className="h-4 w-4" />
+                                  )}
+                                  <span className="text-sm truncate max-w-[150px]">
+                                    {attachment.name}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
-          {/* Loading indicator shown when AI is "thinking" */}
+                      <p className="text-xs text-muted-foreground">
+                        {message.timestamp.toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </motion.div>
+
+                  {/* Message Actions - Only shown for AI responses */}
+                  {message.role === 'assistant' && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex items-center gap-1 ml-12"
+                    >
+                      <Button
+                        variant="flat"
+                        size="sm"
+                        className="rounded-full h-7 w-7 p-0 hover:bg-secondary"
+                        onClick={() => handleCopy(message.content)}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="flat"
+                        size="sm"
+                        className="rounded-full h-7 w-7 p-0 hover:bg-secondary"
+                        onClick={() => handleRegenerate(message.id)}
+                      >
+                        <RefreshCcw className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="flat"
+                        size="sm"
+                        className={cn(
+                          "rounded-full h-7 w-7 p-0",
+                          message.feedback === 'like' 
+                            ? "bg-green-500/10 text-green-600" 
+                            : "hover:bg-green-500/10 hover:text-green-600"
+                        )}
+                        onClick={() => handleFeedback(message.id, 'like')}
+                      >
+                        <ThumbsUp className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="flat"
+                        size="sm"
+                        className={cn(
+                          "rounded-full h-7 w-7 p-0",
+                          message.feedback === 'dislike' 
+                            ? "bg-red-500/10 text-red-600" 
+                            : "hover:bg-red-500/10 hover:text-red-600"
+                        )}
+                        onClick={() => handleFeedback(message.id, 'dislike')}
+                      >
+                        <ThumbsDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </motion.div>
+                  )}
+                </div>
+              ))
+            )}
+          </AnimatePresence>
           {isLoading && (
             <motion.div
-              className="flex gap-2 items-start"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              className="flex items-center gap-2 p-4 max-w-[85%] rounded-2xl bg-secondary/40"
             >
-              {/* AI avatar icon */}
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <Sparkles className="h-3 w-3 text-primary" />
-              </div>
-              {/* Loading dots container with blockquote styling */}
-              <div className="text-foreground/90 pl-4 border-l-2 border-primary/20 font-light">
-                <LoadingDots />
+              <Avatar
+                isBordered
+                src="/avatars/ai.png"
+                fallback="AI"
+                className="h-8 w-8 bg-secondary"
+              />
+              <div className="flex gap-2">
+                <div className="h-2 w-2 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.3s]" />
+                <div className="h-2 w-2 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.15s]" />
+                <div className="h-2 w-2 rounded-full bg-primary/60 animate-bounce" />
               </div>
             </motion.div>
           )}
-
-          {/* Invisible element for scroll anchoring */}
           <div ref={messagesEndRef} />
         </div>
+      </div>
 
-        {/* Fixed input section at bottom */}
-        <div className="sticky bottom-0 border-t bg-background/80 backdrop-blur-sm p-2 md:p-4">
-          {/* Input and send button container */}
-          <div className="relative flex items-center gap-2 max-w-[85rem] mx-auto">
-            <div className={cn(
-              "relative bg-background rounded-xl border shadow-sm w-full",
-              uploadedImages.length > 0 ? 'p-4' : 'p-2 md:p-3'
-            )}>
-              <div className="flex gap-2">
-                <Input
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  disabled={isLoading}
-                />
-                <Button 
-                  onClick={handleSendMessage}
-                  size="icon"
-                  className="h-10 w-10 rounded-full shrink-0 bg-blue-500 hover:bg-[#0866FF]/90"
-                  disabled={isLoading || (!inputMessage.trim() && uploadedImages.length === 0)}
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <ArrowUp className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
+      {/* Fixed Input Form */}
+      <div className="sticky bottom-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
+        <form onSubmit={handleSubmit} className="container max-w-3xl">
+          <div className="flex gap-2 items-center">
+            <>
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                multiple
+                accept="image/*,.pdf,.doc,.docx"
+                onChange={handleFileSelect}
+              />
+              <Button
+                type="button"
+                variant="flat"
+                size="md"
+                className="rounded-full"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              {attachments.length > 0 && (
+                <div className="absolute bottom-full mb-2 left-0 bg-background/95 backdrop-blur p-2 rounded-lg border shadow-lg">
+                  <div className="flex flex-col gap-2">
+                    {attachments.map((file, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/40">
+                          {file.type.includes('image') ? (
+                            <Image className="h-4 w-4" />
+                          ) : file.type.includes('pdf') ? (
+                            <FileText className="h-4 w-4" />
+                          ) : (
+                            <File className="h-4 w-4" />
+                          )}
+                          <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                        </div>
+                        <Button
+                          variant="flat"
+                          size="sm"
+                          className="rounded-full h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+            <div className="flex-1 relative">
+              <Input
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type your message..."
+                className="rounded-full pr-12"
+                disabled={isLoading}
+              />
+              <Button
+                type="submit"
+                size="sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 p-0"
+                disabled={!input.trim() || isLoading}
+              >
+                {isLoading ? (
+                  <Spinner 
+                    size="sm"
+                    color="current"
+                    className="h-4 w-4"
+                  />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
             </div>
           </div>
+        </form>
+      </div>
+
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative max-w-[90vw] max-h-[90vh]">
+            <img 
+              src={selectedImage} 
+              alt="Preview" 
+              className="object-contain max-w-full max-h-[90vh]"
+            />
+            <Button
+              variant="flat"
+              size="sm"
+              className="absolute top-2 right-2 rounded-full bg-black/50 hover:bg-black/75"
+              onClick={() => setSelectedImage(null)}
+            >
+              <X className="h-4 w-4 text-white" />
+            </Button>
+          </div>
         </div>
-      </Card>
+      )}
     </div>
-  );
+  )
 }

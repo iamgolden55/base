@@ -46,24 +46,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const handleNavigation = useCallback(
     ({ section, subsection, url }: { section: string; subsection: string; url: string }) => {
-      // Set the active tab for styling/logic
       setActiveTab(subsection.toLowerCase())
-
-      // (Optional) Update a breadcrumb in your header if desired.
-      const headerElement = document.querySelector('header .bp-breadcrumb')
-      if (headerElement) {
-        const breadcrumbList = headerElement.querySelector('.bp-breadcrumb-list')
-        if (breadcrumbList) {
-          breadcrumbList.innerHTML = `
-            <li><a href="#">${section}</a></li>
-            <li class="separator">/</li>
-            <li>${subsection}</li>
-          `
-        }
-      }
-
-      // Only navigate if the URL is set and not just a placeholder.
-      if (url && url !== "#") {
+      
+      // Only navigate if url is a valid string
+      if (typeof url === 'string' && url !== '#') {
         router.push(url)
       }
     },
@@ -79,46 +65,46 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navMain: [
       {
         title: "Dashboard",
-        url: `/${role}/patient/`, // Actual route for the Dashboard page
+        url: "/role/patient",
         icon: Footprints,
       },
       {
         title: "Appointments",
-        url: `/${role}/patient/appointments`, // Add leading slash
+        url: "/role/patient/appointments",
         icon: Calendar,
       },
       {
         title: "Medical Records",
-        url: `/${role}/patient/medical-records`,
+        url: "/role/patient/medical-records",
         icon: ClipboardMinus,
       },
       {
         title: "Models",
-        url: `/${role}/patient/models`,
+        url: "/role/patient/models",
         icon: Bot,
         items: [
-          { title: "Genesis", url: `/${role}/patient/models` },
-          { title: "Explorer", url: `/${role}/patient/models/explorer` },
-          { title: "Quantum", url: `/${role}/patient/models/quantum` },
+          { title: "Genesis", url: "/role/patient/models" },
+          { title: "Explorer", url: "/role/patient/models/explorer" },
+          { title: "Quantum", url: "/role/patient/models/quantum" },
         ],
       },
       {
         title: "Videos",
-        url: `/${role}/patient/videos`,
+        url: "/role/patient/videos",
         icon: TvMinimalPlay,
         items: [
-          { title: "Exclusive to PHB", url: `/${role}/patient/videos` },
+          { title: "Exclusive to PHB", url: "/role/patient/videos" },
           { title: "Public", url: "#" },
         ],
       },
       {
         title: "Settings",
-        url: `/${role}/patient/settings`,
+        url: "/role/patient/settings",
         icon: Settings2,
         items: [
-          { title: "Profile", url: `/${role}/patient/settings` },
-          { title: "Preferences", url: `/${role}/patient/settings?tab=security` },
-          { title: "Notifications", url: `/${role}/patient/settings?tab=notifications` },
+          { title: "Profile", url: "/role/patient/settings" },
+          { title: "Preferences", url: "/role/patient/settings?tab=security" },
+          { title: "Notifications", url: "/role/patient/settings?tab=notifications" },
         ],
       },
       {

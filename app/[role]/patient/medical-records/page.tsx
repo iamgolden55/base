@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import {
   CheckCircle,
@@ -21,24 +21,60 @@ import {
   Upload,
   Video,
   FileText,
+  ChevronUp,
+  ChevronDown,
+  Minus,
+  Activity,
+  Thermometer,
+  AudioWaveform,
+  HeartHandshake,
+  Bandage,
+  Microscope,
+  Download,
+  Eye,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+    Table,
+    TableHeader,
+    TableColumn,
+    TableBody,
+    TableRow,
+    TableCell,
+    Pagination,
+    Spinner,
+    getKeyValue,
+  } from "@heroui/react";
+  import useSWR from "swr";
+  
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { formatDate } from "@/app/utils/format-date"
+import {User} from "@heroui/react";
 import { useRole } from "@/hooks/useRole"
+import { Icons } from "@/app/components/ui/icons"
+import { cn } from "@/lib/utils"
 
 const medications = [
   { name: "Lisinopril 10mg", dosage: "Once daily", condition: "Hypertension" },
   { name: "Metformin 500mg", dosage: "Twice daily", condition: "Diabetes" },
 ]
 
+const fetcher = (...args: [RequestInfo | URL, RequestInit?]) => fetch(...args).then((res) => res.json());
+
 interface VitalChartData {
   date: string;
   systolic: number;
   diastolic: number;
+}
+
+interface StarWarsPerson {
+  name: string;
+  height: string;
+  mass: string;
+  birth_year: string;
 }
 
 const vitalData: VitalChartData[] = [
@@ -54,66 +90,295 @@ interface Allergy {
 
 const allergies: Allergy[] = [{ name: "Penicillin", severity: "High", reaction: "Anaphylaxis" }]
 
+interface VitalItemProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  unit: string;
+  trend: 'up' | 'down' | 'stable';
+}
+
+const medicalHistory = [
+  {
+    title: "Appendectomy",
+    date: "2024-01-15",
+    location: "City General Hospital",
+    description: "Laparoscopic appendectomy performed under general anesthesia. No complications."
+  },
+  {
+    title: "Annual Physical",
+    date: "2023-12-01",
+    location: "Family Care Clinic",
+    description: "Routine checkup. All vitals normal. Recommended lifestyle modifications."
+  },
+  // Add more history items as needed
+]
+
+const labResults = [
+  {
+    name: "Complete Blood Count",
+    value: "5.2",
+    range: "4.5-5.5",
+    date: "2024-02-15",
+    status: "normal"
+  },
+  {
+    name: "Cholesterol",
+    value: "220",
+    range: "125-200",
+    date: "2024-02-15",
+    status: "high"
+  },
+  // Add more lab results as needed
+]
+
+const documents = [
+  {
+    name: "Annual Physical Report",
+    date: "2024-02-15",
+    type: "PDF",
+    size: "2.4 MB"
+  },
+  {
+    name: "Chest X-Ray",
+    date: "2024-01-20",
+    type: "DICOM",
+    size: "15.8 MB"
+  },
+  // Add more documents as needed
+]
+
 export default function MedicalRecordsPage() {
   const [activeTab, setActiveTab] = useState("overview")
-
+  const [currentPage, setCurrentPage] = useState(1)
 
   return (
-    <div className="max-w-7xl mx-auto p-2 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8">
-      <PatientHeader />
-      <EmergencyContact />
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 mb-4 sm:mb-6 gap-2">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm">
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="appointments" className="text-xs sm:text-sm">
-            Appointments
-          </TabsTrigger>
-          <TabsTrigger value="medications" className="text-xs sm:text-sm">
-            Medications
-          </TabsTrigger>
-          <TabsTrigger value="labresults" className="text-xs sm:text-sm">
-            Lab Results
-          </TabsTrigger>
-          <TabsTrigger value="immunizations" className="text-xs sm:text-sm">
-            Immunizations
-          </TabsTrigger>
-          <TabsTrigger value="treatments" className="text-xs sm:text-sm">
-            Treatments
-          </TabsTrigger>
-          <TabsTrigger value="billing" className="text-xs sm:text-sm">
-            Billing
-          </TabsTrigger>
-          <TabsTrigger value="documents" className="text-xs sm:text-sm">
-            Documents
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="overview">
-          <OverviewDashboard />
-        </TabsContent>
-        <TabsContent value="appointments">
-          <AppointmentsSection />
-        </TabsContent>
-        <TabsContent value="medications">
-          <MedicationsSection />
-        </TabsContent>
-        <TabsContent value="labresults">
-          <LabResultsSection />
-        </TabsContent>
-        <TabsContent value="immunizations">
-          <ImmunizationsSection />
-        </TabsContent>
-        <TabsContent value="treatments">
-          <TreatmentsSection />
-        </TabsContent>
-        <TabsContent value="billing">
-          <BillingSection />
-        </TabsContent>
-        <TabsContent value="documents">
-          <DocumentsSection />
-        </TabsContent>
-      </Tabs>
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
+      {/* Enhanced Header Section */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <div className="container flex flex-col gap-2 p-4">
+          <div className="flex items-center gap-2">
+            <FileText className="h-6 w-6 text-primary" />
+            <h1 className="text-xl font-bold tracking-tight md:text-2xl">Medical Records</h1>
+          </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <div className="flex items-center justify-between">
+              <TabsList className="grid w-full max-w-[600px] grid-cols-4 rounded-full p-1">
+                <TabsTrigger value="overview" className="rounded-full">Overview</TabsTrigger>
+                <TabsTrigger value="history" className="rounded-full">History</TabsTrigger>
+                <TabsTrigger value="tests" className="rounded-full">Tests</TabsTrigger>
+                <TabsTrigger value="documents" className="rounded-full">Documents</TabsTrigger>
+              </TabsList>
+              <Button size="sm" className="bg-primary rounded-full hover:bg-primary/90">
+                <Icons.upload className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Upload Record</span>
+              </Button>
+            </div>
+          </Tabs>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container p-4">
+        <PatientHeader />
+       <br />
+        <EmergencyContact />
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+          <TabsContent value="overview">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Vitals Card */}
+              <Card className="overflow-hidden rounded-2xl border-2 border-primary/10">
+                <div className="bg-blue-500/10 px-4 py-3 border-b border-blue-500/10">
+                  <Badge variant="secondary" className="rounded-full font-medium bg-blue-500/10 text-blue-700">
+                    <Activity className="mr-2 h-4 w-4" />
+                    Latest Vitals
+                  </Badge>
+                </div>
+                <div className="p-4 space-y-4">
+                  <VitalItem icon={<HeartPulse />} label="Blood Pressure" value="120/80" unit="mmHg" trend="stable" />
+                  <VitalItem icon={<Thermometer />} label="Temperature" value="98.6" unit="°F" trend="up" />
+                  <VitalItem icon={<AudioWaveform />} label="Oxygen Level" value="98" unit="%" trend="stable" />
+                  <VitalItem icon={<HeartHandshake />} label="Heart Rate" value="72" unit="bpm" trend="down" />
+                </div>
+              </Card>
+
+              {/* Medications Card */}
+              <Card className="overflow-hidden rounded-2xl border-2 border-primary/10">
+                <div className="bg-green-500/10 px-4 py-3 border-b border-green-500/10">
+                  <Badge variant="secondary" className="rounded-full font-medium bg-green-500/10 text-green-700">
+                    <Bandage className="mr-2 h-4 w-4" />
+                    Current Medications
+                  </Badge>
+                </div>
+                <div className="p-4 space-y-3">
+                  {medications.map((med, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/40">
+                      <Icons.medical className="h-5 w-5 text-green-600" />
+                      <div className="flex-1">
+                        <p className="font-medium">{med.name}</p>
+                        <p className="text-sm text-muted-foreground">{med.dosage} • {med.condition}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* Allergies Card */}
+              <Card className="overflow-hidden rounded-2xl border-2 border-primary/10">
+                <div className="bg-red-500/10 px-4 py-3 border-b border-red-500/10">
+                  <Badge variant="secondary" className="rounded-full font-medium bg-red-500/10 text-red-700">
+                    <Icons.alert className="mr-2 h-4 w-4" />
+                    Allergies & Alerts
+                  </Badge>
+                </div>
+                <div className="p-4 space-y-3">
+                  {allergies.map((allergy, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-red-50">
+                      <Icons.alert className="h-5 w-5 text-red-600" />
+                      <div className="flex-1">
+                        <p className="font-medium text-red-700">{allergy.name}</p>
+                        <p className="text-sm text-red-600/80">Severity: {allergy.severity} • {allergy.reaction}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-4">
+            <Card className="overflow-hidden rounded-2xl border-2 border-primary/10">
+              <div className="bg-purple-500/10 px-4 py-3 border-b border-purple-500/10">
+                <Badge variant="secondary" className="rounded-full font-medium bg-purple-500/10 text-purple-700">
+                  <Icons.clock className="mr-2 h-4 w-4" />
+                  Medical History Timeline
+                </Badge>
+              </div>
+              <div className="p-4 space-y-4">
+                {medicalHistory.map((event, index) => (
+                  <div key={index} className="flex gap-4">
+                    <div className="flex flex-col items-center">
+                      <div className="w-3 h-3 bg-primary rounded-full" />
+                      {index < medicalHistory.length - 1 && <div className="w-0.5 h-full bg-gray-200" />}
+                    </div>
+                    <div className="flex-1 pb-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{event.title}</h3>
+                          <p className="text-sm text-muted-foreground">{event.location}</p>
+                        </div>
+                        <Badge variant="outline" className="rounded-full">
+                          {event.date}
+                        </Badge>
+                      </div>
+                      <p className="mt-2 text-sm text-muted-foreground">{event.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="tests" className="space-y-4">
+            <Card className="overflow-hidden rounded-2xl border-2 border-primary/10">
+              <div className="bg-blue-500/10 px-4 py-3 border-b border-blue-500/10">
+                <Badge variant="secondary" className="rounded-full font-medium bg-blue-500/10 text-blue-700">
+                  <Microscope className="mr-2 h-4 w-4" />
+                  Laboratory Results
+                </Badge>
+              </div>
+              <div className="p-4">
+                <Table
+                  aria-label="Lab Results"
+                  classNames={{
+                    wrapper: "rounded-xl border-2 border-primary/10",
+                    th: "bg-secondary/40 text-foreground font-medium",
+                    td: "text-muted-foreground"
+                  }}
+                >
+                  <TableHeader>
+                    <TableColumn>TEST NAME</TableColumn>
+                    <TableColumn>RESULT</TableColumn>
+                    <TableColumn>REFERENCE RANGE</TableColumn>
+                    <TableColumn>DATE</TableColumn>
+                    <TableColumn>STATUS</TableColumn>
+                  </TableHeader>
+                  <TableBody>
+                    {labResults.map((result, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{result.name}</TableCell>
+                        <TableCell>{result.value}</TableCell>
+                        <TableCell>{result.range}</TableCell>
+                        <TableCell>{result.date}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="secondary" 
+                            className={cn(
+                              "rounded-full",
+                              result.status === "normal" ? "bg-green-500/10 text-green-700" :
+                              result.status === "high" ? "bg-red-500/10 text-red-700" :
+                              "bg-yellow-500/10 text-yellow-700"
+                            )}
+                          >
+                            {result.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="documents" className="space-y-4">
+            <Card className="overflow-hidden rounded-2xl border-2 border-primary/10">
+              <div className="bg-green-500/10 px-4 py-3 border-b border-green-500/10">
+                <Badge variant="secondary" className="rounded-full font-medium bg-green-500/10 text-green-700">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Medical Documents
+                </Badge>
+              </div>
+              <div className="p-4 space-y-3">
+                {documents.map((doc, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-secondary/40">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "p-2 rounded-lg",
+                        doc.type === "PDF" ? "bg-red-500/10" :
+                        doc.type === "DICOM" ? "bg-blue-500/10" :
+                        "bg-purple-500/10"
+                      )}>
+                        <FileText className={cn(
+                          "h-5 w-5",
+                          doc.type === "PDF" ? "text-red-500" :
+                          doc.type === "DICOM" ? "text-blue-500" :
+                          "text-purple-500"
+                        )} />
+                      </div>
+                      <div>
+                        <p className="font-medium">{doc.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {doc.date} • {doc.type} • {doc.size}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="rounded-full">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" className="rounded-full">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   )
 }
@@ -129,6 +394,7 @@ function PatientHeader() {
             <AvatarImage src="/placeholder-avatar.jpg" alt="Sarah Johnson" />
             <AvatarFallback>{userData?.basic_info?.full_name?.charAt(0)}</AvatarFallback>
           </Avatar>
+          
           <div className="flex-1 text-center sm:text-left">
             <div className="flex flex-col sm:flex-row items-center sm:items-baseline gap-2 sm:gap-4 mb-2">
               <h1 className="text-2xl sm:text-3xl font-light">{userData?.basic_info?.full_name}</h1>
@@ -181,339 +447,21 @@ function EmergencyContact() {
   )
 }
 
-function OverviewDashboard() {
+function VitalItem({ icon, label, value, unit, trend }: VitalItemProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-      <DashboardPanel
-        icon={<Pill className="w-6 h-6 text-blue-500" />}
-        title="Active Medications"
-        badge={`${medications.length} prescriptions`}
-      >
-        <MedicationList medications={medications} />
-      </DashboardPanel>
-
-      <DashboardPanel icon={<HeartPulse className="w-6 h-6 text-red-500" />} title="Vital Trends" badge="Last 30 days">
-        <VitalChart data={vitalData} />
-      </DashboardPanel>
-
-      <DashboardPanel icon={<NutOff className="w-6 h-6 text-yellow-500" />} title="Allergy Profile" badge="High Risk">
-        <AllergySeverity allergies={allergies} />
-      </DashboardPanel>
-
-      <DashboardPanel
-        icon={<Calendar className="w-6 h-6 text-green-500" />}
-        title="Upcoming Appointments"
-        badge="Next 7 days"
-      >
-        <UpcomingAppointments />
-      </DashboardPanel>
-
-      <DashboardPanel icon={<Target className="w-6 h-6 text-purple-500" />} title="Health Goals" badge="In Progress">
-        <HealthGoals />
-      </DashboardPanel>
-
-      <DashboardPanel
-        icon={<MessageSquare className="w-6 h-6 text-indigo-500" />}
-        title="Secure Messages"
-        badge="1 unread"
-      >
-        <SecureMessaging />
-      </DashboardPanel>
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/40">
+      <div className="text-blue-600">{icon}</div>
+      <div className="flex-1">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-medium">{value}</p>
+          <span className="text-sm text-muted-foreground">{unit}</span>
+          {trend === "up" && <ChevronUp className="h-4 w-4 text-green-500" />}
+          {trend === "down" && <ChevronDown className="h-4 w-4 text-red-500" />}
+          {trend === "stable" && <Minus className="h-4 w-4 text-blue-500" />}
+        </div>
+      </div>
     </div>
-  )
-}
-
-function AppointmentsSection() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Appointments</CardTitle>
-        <CardDescription>Manage your upcoming and past appointments</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <UpcomingAppointments />
-        <div className="mt-4">
-          <Button>
-            <Calendar className="w-4 h-4 mr-2" />
-            Schedule New Appointment
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function MedicationsSection() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Medications</CardTitle>
-        <CardDescription>Your current prescriptions and medication history</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <MedicationList medications={medications} />
-        <div className="mt-4">
-          <Button variant="outline">
-            <RefreshCcw className="w-4 h-4 mr-2" />
-            Request Refill
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function LabResultsSection() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Lab Results</CardTitle>
-        <CardDescription>View and track your lab test results over time</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <LabResultsTable />
-      </CardContent>
-    </Card>
-  )
-}
-
-function ImmunizationsSection() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Immunization Records</CardTitle>
-        <CardDescription>Your vaccination history and upcoming immunizations</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ImmunizationList />
-      </CardContent>
-    </Card>
-  )
-}
-
-function TreatmentsSection() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Treatment Plans</CardTitle>
-        <CardDescription>Current and past treatment plans for your conditions</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <TreatmentPlanList />
-      </CardContent>
-    </Card>
-  )
-}
-
-function BillingSection() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Billing & Insurance</CardTitle>
-        <CardDescription>Manage your bills, payments, and insurance information</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <BillingOverview />
-        <div className="mt-4">
-          <Button>
-            <CreditCard className="w-4 h-4 mr-2" />
-            Make a Payment
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function DocumentsSection() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Documents & Records</CardTitle>
-        <CardDescription>Access and upload important medical documents</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <DocumentList />
-        <div className="mt-4">
-          <Button variant="outline">
-            <Upload className="w-4 h-4 mr-2" />
-            Upload New Document
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-interface DashboardPanelProps {
-  icon: React.ReactNode
-  title: string
-  badge: string
-  children: React.ReactNode
-}
-
-function DashboardPanel({ icon, title, badge, children }: DashboardPanelProps) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-base sm:text-lg font-medium flex items-center gap-2">
-          {icon}
-          {title}
-        </CardTitle>
-        <Badge variant="secondary" className="text-xs sm:text-sm">
-          {badge}
-        </Badge>
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
-  )
-}
-
-interface Medication {
-  name?: string;
-  dosage?: string;
-  frequency?: string;
-  // Add other medication properties as needed
-}
-
-function MedicationList({ medications }: { medications: Medication[] }) {
-  return (
-    <ul className="space-y-2 text-sm">
-      {medications.map((medication, index) => (
-        <motion.li
-          key={index}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="p-2 bg-gray-50 rounded-md"
-        >
-          <p className="font-medium">{medication.name}</p>
-          <p className="text-xs text-muted-foreground">
-            {medication.dosage} • {medication.frequency}
-          </p>
-        </motion.li>
-      ))}
-    </ul>
-  )
-}
-
-function VitalChart({ data }: { data: VitalChartData[] }) {
-  // Implement chart using a library like recharts or react-chartjs-2
-  return (
-    <div className="h-48 flex items-center justify-center bg-gray-100 rounded-md">
-      <p className="text-muted-foreground">Chart placeholder</p>
-    </div>
-  )
-}
-
-function AllergySeverity({ allergies }: { allergies: Allergy[] }) {
-  return (
-    <ul className="space-y-2">
-      {allergies.map((allergy, index) => (
-        <motion.li
-          key={index}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="p-2 bg-red-50 rounded-md"
-        >
-          <p className="font-medium text-red-700">{allergy.name}</p>
-          <p className="text-sm text-red-600">
-            Severity: {allergy.severity} • Reaction: {allergy.reaction}
-          </p>
-        </motion.li>
-      ))}
-    </ul>
-  )
-}
-
-function UpcomingAppointments() {
-  const appointments = [
-    { date: "2024-03-15", time: "10:00 AM", doctor: "Dr. Emily Wilson", type: "Check-up" },
-    { date: "2024-03-22", time: "2:30 PM", doctor: "Dr. Michael Chen", type: "Cardiology" },
-  ]
-
-  return (
-    <ul className="space-y-2">
-      {appointments.map((appointment, index) => (
-        <motion.li
-          key={index}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="p-2 bg-gray-50 rounded-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
-        >
-          <div>
-            <p className="font-medium text-sm">
-              {appointment.type} with {appointment.doctor}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {formatDate(appointment.date)} at {appointment.time}
-            </p>
-          </div>
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
-            <Video className="w-4 h-4 mr-2" />
-            Join
-          </Button>
-        </motion.li>
-      ))}
-    </ul>
-  )
-}
-
-function HealthGoals() {
-  const goals = [
-    { goal: "Lose 10 lbs", progress: 60, target: "by June 1st" },
-    { goal: "Lower blood pressure", progress: 40, target: "to 120/80" },
-  ]
-
-  return (
-    <ul className="space-y-2">
-      {goals.map((goal, index) => (
-        <motion.li
-          key={index}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="p-2 bg-gray-50 rounded-md"
-        >
-          <p className="font-medium">{goal.goal}</p>
-          <p className="text-sm text-muted-foreground">Target: {goal.target}</p>
-          <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${goal.progress}%` }}></div>
-          </div>
-        </motion.li>
-      ))}
-    </ul>
-  )
-}
-
-function SecureMessaging() {
-  const messages = [
-    { from: "Dr. Emily Wilson", subject: "Follow-up on recent lab results", date: "2024-03-10", unread: true },
-    { from: "Nurse Practitioner Johnson", subject: "Medication adjustment", date: "2024-03-08", unread: false },
-  ]
-
-  return (
-    <ul className="space-y-2">
-      {messages.map((message, index) => (
-        <motion.li
-          key={index}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className={`p-2 rounded-md flex justify-between items-center ${message.unread ? "bg-blue-50" : "bg-gray-50"}`}
-        >
-          <div>
-            <p className={`font-medium ${message.unread ? "text-blue-600" : ""}`}>{message.subject}</p>
-            <p className="text-sm text-muted-foreground">
-              From: {message.from} • {formatDate(message.date)}
-            </p>
-          </div>
-          {message.unread && <Badge>New</Badge>}
-        </motion.li>
-      ))}
-    </ul>
   )
 }
 
@@ -524,32 +472,58 @@ function LabResultsTable() {
     { test: "HbA1c", result: "5.7%", date: "2024-01-15" },
   ]
 
+  const [page, setPage] = useState(1);
+
+  const {data, isLoading} = useSWR(`https://swapi.py4e.com/api/people?page=${page}`, fetcher, {
+    keepPreviousData: true,
+  });
+
+  const rowsPerPage = 10;
+
+  const pages = useMemo(() => {
+    return data?.count ? Math.ceil(data.count / rowsPerPage) : 0;
+  }, [data?.count, rowsPerPage]);
+
+  const loadingState = isLoading || data?.results.length === 0 ? "loading" : "idle";
+
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b">
-            <th className="text-left p-2">Test</th>
-            <th className="text-left p-2">Result</th>
-            <th className="text-left p-2">Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {labResults.map((result, index) => (
-            <motion.tr
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="border-b last:border-b-0"
-            >
-              <td className="p-2">{result.test}</td>
-              <td className="p-2">{result.result}</td>
-              <td className="p-2">{formatDate(result.date)}</td>
-            </motion.tr>
-          ))}
-        </tbody>
-      </table>
+      <Table
+      aria-label="Example table with client async pagination"
+      bottomContent={
+        pages > 0 ? (
+          <div className="flex w-full justify-center">
+            <Pagination
+              isCompact
+              showControls
+              showShadow
+              color="primary"
+              page={page}
+              total={pages}
+              onChange={(page) => setPage(page)}
+            />
+          </div>
+        ) : null
+      }
+    >
+      <TableHeader>
+        <TableColumn key="name">Name</TableColumn>
+        <TableColumn key="height">Height</TableColumn>
+        <TableColumn key="mass">Mass</TableColumn>
+        <TableColumn key="birth_year">Birth year</TableColumn>
+      </TableHeader>
+      <TableBody
+        items={data?.results ?? [] as StarWarsPerson[]}
+        loadingContent={<Spinner />}
+        loadingState={loadingState}
+      >
+        {(item: StarWarsPerson) => (
+          <TableRow key={item.name}>
+            {(columnKey) => <TableCell>{getKeyValue(item, columnKey)}</TableCell>}
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
     </div>
   )
 }

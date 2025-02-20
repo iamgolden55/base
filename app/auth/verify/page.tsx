@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { OTPInput } from "@/components/otp-input"
 import { Button } from "@/components/ui/button"
@@ -24,13 +24,9 @@ export default function VerifyPage() {
   const [otp, setOtp] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [verificationTimer, setVerificationTimer] = useState<NodeJS.Timeout | null>(null)
 
-  const handleVerify = async () => {
-    if (otp.length !== 6) {
-      setError("Please enter a valid 6-digit code");
-      return;
-    }
-  
+  const verifyOtp = async (otpValue: string) => {
     setIsLoading(true);
     setError("");
   
@@ -40,27 +36,19 @@ export default function VerifyPage() {
     try {
       const response = await axiosInstance.post('/api/verify-login-otp/', {
         email: email,
-        otp: otp
+        otp: otpValue
       });
       
-      console.log('OTP verification response:', response.data);
-      console.log('Full response:', response.data);
-      console.log('User data:', response.data.user_data);
-
       const decodedToken = jwtDecode<DecodedToken>(response.data.tokens.access);
-      console.log('Decoded token:', decodedToken);
-      console.log('Decoded token after OTP:', decodedToken);
       localStorage.setItem(ACCESS_TOKEN_KEY, response.data.tokens.access);
       localStorage.setItem(REFRESH_TOKEN_KEY, response.data.tokens.refresh);
   
-      // Set onboarding status
       if (decodedToken.user?.has_completed_onboarding) {
         localStorage.setItem('hasCompletedOnboarding', 'true');
       } else {
         localStorage.setItem('hasCompletedOnboarding', 'false');
       }
   
-      // Redirect based on onboarding status
       window.location.href = decodedToken.user?.has_completed_onboarding 
         ? "/role/patient" 
         : "/role/patient/onboarding";
@@ -71,8 +59,37 @@ export default function VerifyPage() {
     } finally {
       setIsLoading(false);
     }
-  };  
-  
+  };
+
+  const handleOtpChange = (value: string) => {
+    setOtp(value);
+    
+    // Clear any existing timer
+    if (verificationTimer) {
+      clearTimeout(verificationTimer);
+    }
+
+    if (value.length === 6) {
+      // Set loading state immediately to show user something is happening
+      setIsLoading(true);
+      
+      // Start a new timer for 500ms
+      const timer = setTimeout(() => {
+        verifyOtp(value);
+      }, 500); // Half second delay
+      
+      setVerificationTimer(timer);
+    }
+  };
+
+  // Cleanup timer on component unmount
+  useEffect(() => {
+    return () => {
+      if (verificationTimer) {
+        clearTimeout(verificationTimer);
+      }
+    };
+  }, [verificationTimer]);
 
   const handleResend = async () => {
     try {
@@ -91,7 +108,7 @@ export default function VerifyPage() {
   }
 
   return (
-    <div className="container flex h-screen w-screen flex-col items-center justify-center">
+    <div className="container relative flex min-h-screen w-full flex-col items-center justify-center py-12">
       <Card className="w-[380px]">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Verify Your Account</CardTitle>
@@ -103,7 +120,7 @@ export default function VerifyPage() {
           <div className="grid gap-4">
             <OTPInput
               value={otp}
-              onChange={setOtp}
+              onChange={handleOtpChange}
               disabled={isLoading}
               className="justify-center"
               length={6}
@@ -113,16 +130,11 @@ export default function VerifyPage() {
                 {error}
               </p>
             )}
-            <Button
-              className="bg-blue-500 hover:bg-blue-600 w-full"
-              onClick={handleVerify}
-              disabled={otp.length !== 6 || isLoading}
-            >
-              <div className="flex items-center justify-center gap-2">
-                {isLoading && <Spinner size="sm" color="white" />}
-                <span>{isLoading ? "Verifying..." : "Verify"}</span>
+            {isLoading && (
+              <div className="flex justify-center">
+                <Spinner size="sm" color="primary" />
               </div>
-            </Button>
+            )}
             <p className="text-center text-sm text-muted-foreground">
               Didn&apos;t receive the code?{" "}
               <button onClick={handleResend} className="text-primary hover:underline">
@@ -132,7 +144,7 @@ export default function VerifyPage() {
           </div>
         </CardContent>
       </Card>
-      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
+      <div className="mt-4 text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
         By clicking continue, you agree to our <a href="/terms">Terms of Service</a>{" "}
         and <a href="/privacy">Privacy Policy</a>.
       </div>

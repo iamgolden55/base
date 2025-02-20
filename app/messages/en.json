@@ -1,0 +1,17 @@
+{
+  "common": {
+    "welcome": "Welcome back",
+    "login": "Login",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot your password?",
+    "dontHaveAccount": "Don't have an account?",
+    "signUp": "Sign up"
+  },
+  "dashboard": {
+    "healthSummary": "Health Summary",
+    "hpn": "Health Point Number (HPN)",
+    "profileStatus": "Profile Status",
+    "lastUpdated": "Last updated"
+  }
+} 

@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label"
 import { Spinner, Checkbox } from "@nextui-org/react"
 import { useState } from "react"
 import { format } from "date-fns"
-import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
   PopoverContent,
@@ -105,17 +104,15 @@ export function RegisterForm({
     setIsLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      
       // Prepare the data for the backend
+      const { fullName, ...rest } = formData;
       const registrationData = {
-        ...formData,
-        full_name: formData.fullName.trim(), // Send fullName as full_name
-        fullName: undefined, // Remove the frontend field
+        ...rest,
+        full_name: fullName.trim(),
       };
       
       console.log('Sending registration data:', registrationData);
-      const response = await axiosInstance.post(`${apiUrl}api/registration/`, registrationData);
+      const response = await axiosInstance.post('/api/registration/', registrationData);
       console.log('Registration response:', response);
 
       if (response.data) {

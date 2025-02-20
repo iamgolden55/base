@@ -26,10 +26,19 @@ interface DecodedToken {
 }
 
 export function OnboardingFlow() {
+  const [mounted, setMounted] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const { completeOnboarding } = useOnboardingStatus();
   const router = useRouter();
   const userData = useRole();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   const ONBOARDING_STEPS = [
     {

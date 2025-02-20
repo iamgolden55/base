@@ -27,11 +27,11 @@ const HpnCard = () => {
       </div>
 
       <CardContent className="p-6 relative z-10">
-        <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Health Summary</h2>
+        <h2 className="text-xl font-normal mb-6 text-gray-900 dark:text-white">Health Summary</h2>
         <div className="grid gap-6">
-        <h2 className="text-3xl font-semibold">
+        <h2 className="text-3xl font-extralight">
           <span className="bg-gradient-to-r from-blue-600 to-cyan-600 text-transparent bg-clip-text">
-          {userData?.basic_info?.full_name}
+          {userData?.basic_info?.full_name}.
           </span>
         </h2>
           
@@ -74,14 +74,42 @@ const HpnCard = () => {
               {userData?.basic_info?.hpn || 'Loading...'}
               </div>
               <button 
-                className="text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-full transition-colors"
-                onClick={() => {
-                  navigator.clipboard.writeText(userData?.basic_info?.hpn || '');
-                  toast.success('HPN copied to clipboard');
+                className="text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-full transition-all duration-200 ease-in-out"
+                onClick={async (e) => {
+                  e.preventDefault()
+                  try {
+                    if (navigator.clipboard && userData?.basic_info?.hpn) {
+                      await navigator.clipboard.writeText(userData.basic_info.hpn)
+                      toast.success('HPN copied to clipboard ✅', {
+                        duration: 1500,
+                        position: 'bottom-right'
+                      })
+                    } else {
+                      const textArea = document.createElement('textarea')
+                      textArea.value = userData?.basic_info?.hpn || ''
+                      textArea.style.position = 'fixed'
+                      textArea.style.opacity = '0'
+                      document.body.appendChild(textArea)
+                      textArea.select()
+                      try {
+                        document.execCommand('copy')
+                        toast.success('HPN copied to clipboard ✅', {
+                          duration: 1500,
+                          position: 'bottom-right'
+                        })
+                      } catch (err) {
+                        toast.error('Failed to copy HPN ❌')
+                      }
+                      document.body.removeChild(textArea)
+                    }
+                  } catch (error) {
+                    toast.error('Failed to copy HPN ❌')
+                    console.error('Copy failed:', error)
+                  }
                 }}
                 aria-label="Copy HPN to clipboard"
               >
-                <Copy className="h-4 w-4" />
+                <Copy className="h-4 w-4 transform transition-transform duration-200 ease-in-out hover:scale-110" />
               </button>
             </div>
             <p className="text-5l font-light tracking-tight">
