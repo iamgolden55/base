@@ -121,7 +121,7 @@ export default function TicketSelector() {
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">Share the Gift of Health 🎉</h4>
-                <p className="text-sm text-muted-foreground">
+                <p  className="text-5l font-light tracking-tight">
                 Give your loved ones the ultimate care package with a PHB Health Card. Perfect for friends and family, this thoughtful gift ensures access to essential healthcare services. Choose from three flexible options and show them you care in the best way possible.
               <Link href="#" className="text-blue-500 ml-1">read guidelines</Link>
             </p>

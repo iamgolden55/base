@@ -27,9 +27,9 @@ const HpnCard = () => {
       </div>
 
       <CardContent className="p-6 relative z-10">
-        <h2 className="text-xl font-normal mb-6 text-gray-900 dark:text-white">Health Summary</h2>
+        <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Health Summary</h2>
         <div className="grid gap-6">
-        <h2 className="text-3xl font-extralight">
+        <h2 className="text-3xl font-semibold">
           <span className="bg-gradient-to-r from-blue-600 to-cyan-600 text-transparent bg-clip-text">
           {userData?.basic_info?.full_name}.
           </span>
@@ -39,7 +39,7 @@ const HpnCard = () => {
           <div className="relative">
             <div className="flex items-center gap-2 mb-2">
               <Fingerprint className="h-5 w-5 text-blue-500" />
-              <span className="text-sm text-gray-500 font-medium">
+              <span className="text-5l font-light tracking-tight">
                 Health Point Number (HPN)
               </span>
               <HoverCard>

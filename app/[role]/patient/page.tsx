@@ -131,7 +131,7 @@ export default function DashboardPage() {
                   Expert Health Consultations<br className="hidden md:block" />
                   Anytime, Anywhere
                 </h1>
-                <p className="text-white/80 text-xs md:text-sm mb-4 md:mb-6 max-w-xl">
+                <p className="text-white/80 text-2l md:text-sm mb-4 md:mb-6 max-w-xl">
                   Access top-tier health consultations from the comfort of your home or on the go. Our platform connects you with experienced medical professionals around the clock
                 </p>
                 <Button 
