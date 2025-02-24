@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { toast } from "sonner"
 
 interface RegisterFormData {
   fullName: string;
@@ -50,12 +51,24 @@ interface RegisterFormData {
   };
 }
 
+interface ValidationErrors {
+  [key: string]: string;
+}
+
+interface ApiError {
+  status: string;
+  message: string;
+  errors?: ValidationErrors;
+}
+
 export function RegisterForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  const [apiError, setApiError] = useState<string>('');
   const [formData, setFormData] = useState<RegisterFormData>({
     fullName: '',
     email: '',
@@ -74,6 +87,93 @@ export function RegisterForm({
   });
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNIN, setShowNIN] = useState(false);
+
+  const validateStep1 = () => {
+    const validationErrors: ValidationErrors = {};
+    
+    if (!formData.fullName?.trim()) {
+      validationErrors.full_name = 'Full name is required';
+    }
+    
+    if (!formData.email?.trim()) {
+      validationErrors.email = 'Email is required';
+    }
+    
+    if (!formData.gender) {
+      validationErrors.gender = 'Gender is required';
+    }
+    
+    if (!formData.phone) {
+      validationErrors.phone = 'Phone number is required';
+    }
+    
+    if (!formData.password) {
+      validationErrors.password = 'Password is required';
+    }
+    
+    if (formData.password !== confirmPassword) {
+      validationErrors.confirm_password = 'Passwords do not match';
+    }
+    
+    return validationErrors;
+  };
+
+  const validateStep2 = () => {
+    const validationErrors: ValidationErrors = {};
+    
+    if (!formData.date_of_birth) {
+      validationErrors.date_of_birth = 'Date of birth is required';
+    }
+    
+    if (!formData.country?.trim()) {
+      validationErrors.country = 'Country is required';
+    }
+    
+    if (!formData.state?.trim()) {
+      validationErrors.state = 'State is required';
+    }
+    
+    if (!formData.city?.trim()) {
+      validationErrors.city = 'City is required';
+    }
+    
+    if (formData.country?.toLowerCase().trim() === 'nigeria') {
+      if (!formData.nin) {
+        validationErrors.nin = 'NIN is required for Nigerian residents';
+      } else if (formData.nin.length !== 11) {
+        validationErrors.nin = 'NIN must be exactly 11 digits';
+      }
+    }
+    
+    return validationErrors;
+  };
+
+  const goToNextStep = () => {
+    setErrors({});
+    setApiError('');
+    
+    let validationErrors: ValidationErrors = {};
+    
+    if (step === 1) {
+      validationErrors = validateStep1();
+    } else if (step === 2) {
+      validationErrors = validateStep2();
+    }
+    
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error('Please fix the validation errors before continuing');
+      return;
+    }
+    
+    setStep(prev => prev + 1);
+  };
+
+  const goToPreviousStep = () => {
+    setErrors({});
+    setApiError('');
+    setStep(prev => prev - 1);
+  };
 
   const handleInputChange = (field: keyof RegisterFormData, value: any) => {
     setFormData(prev => ({
@@ -102,6 +202,63 @@ export function RegisterForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrors({});
+    setApiError('');
+
+    // Basic frontend validation
+    const validationErrors: ValidationErrors = {};
+    
+    if (!formData.fullName?.trim()) {
+      validationErrors.full_name = 'Full name is required';
+    }
+    
+    if (!formData.email?.trim()) {
+      validationErrors.email = 'Email is required';
+    }
+    
+    if (!formData.password) {
+      validationErrors.password = 'Password is required';
+    }
+    
+    if (!formData.gender) {
+      validationErrors.gender = 'Gender is required';
+    }
+    
+    if (!formData.phone) {
+      validationErrors.phone = 'Phone number is required';
+    }
+    
+    if (!formData.date_of_birth) {
+      validationErrors.date_of_birth = 'Date of birth is required';
+    }
+    
+    if (!formData.country?.trim()) {
+      validationErrors.country = 'Country is required';
+    }
+    
+    if (!formData.state?.trim()) {
+      validationErrors.state = 'State is required';
+    }
+    
+    if (!formData.city?.trim()) {
+      validationErrors.city = 'City is required';
+    }
+    
+    if (formData.country?.toLowerCase().trim() === 'nigeria') {
+      if (!formData.nin) {
+        validationErrors.nin = 'NIN is required for Nigerian residents';
+      } else if (formData.nin.length !== 11) {
+        validationErrors.nin = 'NIN must be exactly 11 digits';
+      }
+    }
+
+    // Check if there are any validation errors
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      setIsLoading(false);
+      toast.error('Please fix the validation errors before submitting');
+      return;
+    }
 
     try {
       // Prepare the data for the backend
@@ -120,18 +277,58 @@ export function RegisterForm({
           localStorage.setItem(ACCESS_TOKEN_KEY, response.data.access);
           localStorage.setItem(REFRESH_TOKEN_KEY, response.data.refresh);
         }
-        window.location.href = '/auth/login';
+        toast.success('Registration successful! Redirecting to login...');
+        setTimeout(() => {
+          window.location.href = '/auth/login';
+        }, 2000);
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
+      
       if (error.response?.data) {
         const errorData = error.response.data;
-        console.error('Server error:', errorData);
+        
+        if (typeof errorData === 'string') {
+          setApiError(errorData);
+          toast.error(errorData);
+        } else if (errorData.error) {
+          setApiError(errorData.error);
+          toast.error(errorData.error);
+        } else if (errorData.message) {
+          setApiError(errorData.message);
+          toast.error(errorData.message);
+        } else if (errorData.errors) {
+          setErrors(errorData.errors);
+          toast.error('Please fix the validation errors');
+        } else {
+          // Handle validation errors from the backend
+          const backendErrors: ValidationErrors = {};
+          Object.entries(errorData).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+              backendErrors[key] = value[0];
+            } else if (typeof value === 'string') {
+              backendErrors[key] = value;
+            }
+          });
+          
+          if (Object.keys(backendErrors).length > 0) {
+            setErrors(backendErrors);
+            toast.error('Please fix the validation errors');
+          } else {
+            const errorMessage = 'An error occurred during registration. Please try again.';
+            setApiError(errorMessage);
+            toast.error(errorMessage);
+          }
+        }
+        
+        // If there's a NIN error and country is Nigeria, show NIN field
+        if (errorData.nin || errorData.errors?.nin) {
+          setShowNIN(true);
+        }
+      } else {
+        const errorMessage = 'Network error. Please check your connection and try again.';
+        setApiError(errorMessage);
+        toast.error(errorMessage);
       }
     } finally {
       setIsLoading(false);
@@ -161,7 +358,11 @@ export function RegisterForm({
           required
           value={formData.fullName}
           onChange={(e) => handleInputChange('fullName', e.target.value)}
+          className={cn(errors.full_name && "border-red-500 focus:ring-red-500")}
         />
+        {errors.full_name && (
+          <p className="text-sm text-red-500">{errors.full_name}</p>
+        )}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="email">Email</Label>
@@ -172,7 +373,11 @@ export function RegisterForm({
           required
           value={formData.email}
           onChange={(e) => handleInputChange('email', e.target.value)}
+          className={cn(errors.email && "border-red-500 focus:ring-red-500")}
         />
+        {errors.email && (
+          <p className="text-sm text-red-500">{errors.email}</p>
+        )}
       </div>
       <div className="grid gap-2">
         <Label>Gender</Label>
@@ -184,7 +389,10 @@ export function RegisterForm({
               value="male"
               checked={formData.gender === "male"}
               onChange={(e) => handleInputChange('gender', e.target.value)}
-              className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+              className={cn(
+                "h-4 w-4 text-primary border-gray-300 focus:ring-primary",
+                errors.gender && "border-red-500 focus:ring-red-500"
+              )}
               required
             />
             <span>Male</span>
@@ -196,7 +404,10 @@ export function RegisterForm({
               value="female"
               checked={formData.gender === "female"}
               onChange={(e) => handleInputChange('gender', e.target.value)}
-              className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+              className={cn(
+                "h-4 w-4 text-primary border-gray-300 focus:ring-primary",
+                errors.gender && "border-red-500 focus:ring-red-500"
+              )}
               required
             />
             <span>Female</span>
@@ -208,12 +419,18 @@ export function RegisterForm({
               value="other"
               checked={formData.gender === "other"}
               onChange={(e) => handleInputChange('gender', e.target.value)}
-              className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+              className={cn(
+                "h-4 w-4 text-primary border-gray-300 focus:ring-primary",
+                errors.gender && "border-red-500 focus:ring-red-500"
+              )}
               required
             />
             <span>Other</span>
           </label>
         </div>
+        {errors.gender && (
+          <p className="text-sm text-red-500">{errors.gender}</p>
+        )}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="phone">Phone Number</Label>
@@ -225,6 +442,9 @@ export function RegisterForm({
           defaultCountry="NG"
           placeholder="Enter phone number"
         />
+        {errors.phone && (
+          <p className="text-sm text-red-500">{errors.phone}</p>
+        )}
       </div>
       <div className="grid gap-2">
         <PasswordInput
@@ -232,7 +452,11 @@ export function RegisterForm({
           onChange={(e) => handleInputChange('password', e)}
           required
           showStrengthIndicator={true}
+          className={cn(errors.password && "border-red-500 focus:ring-red-500")}
         />
+        {errors.password && (
+          <p className="text-sm text-red-500">{errors.password}</p>
+        )}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -256,7 +480,7 @@ export function RegisterForm({
       <Button 
         type="button" 
         className="w-full bg-blue-500 hover:bg-blue-600"
-        onClick={() => setStep(2)}
+        onClick={goToNextStep}
         disabled={!formData.password || !confirmPassword || formData.password !== confirmPassword}
       >
         Continue
@@ -274,10 +498,13 @@ export function RegisterForm({
           max={new Date().toISOString().split('T')[0]}
           min="1900-01-01"
           required
-          className="w-full"
+          className={cn("w-full", errors.date_of_birth && "border-red-500 focus:ring-red-500")}
           value={formData.date_of_birth}
           onChange={(e) => handleInputChange('date_of_birth', e.target.value)}
         />
+        {errors.date_of_birth && (
+          <p className="text-sm text-red-500">{errors.date_of_birth}</p>
+        )}
         {formData.date_of_birth && (
           <p className="text-xs text-muted-foreground">
             Age: {calculateAge(formData.date_of_birth)} years old
@@ -291,12 +518,16 @@ export function RegisterForm({
           placeholder="Nigeria"
           required
           value={formData.country}
+          className={cn(errors.country && "border-red-500 focus:ring-red-500")}
           onChange={(e) => {
             const inputValue = e.target.value;
             handleInputChange('country', inputValue);
             setShowNIN(inputValue.trim().toLowerCase() === 'nigeria');
           }}
         />
+        {errors.country && (
+          <p className="text-sm text-red-500">{errors.country}</p>
+        )}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="state">State/Province <span className="text-red-500">*</span></Label>
@@ -305,8 +536,12 @@ export function RegisterForm({
           required
           placeholder="Lagos"
           value={formData.state}
+          className={cn(errors.state && "border-red-500 focus:ring-red-500")}
           onChange={(e) => handleInputChange('state', e.target.value)}
         />
+        {errors.state && (
+          <p className="text-sm text-red-500">{errors.state}</p>
+        )}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="city">City</Label>
@@ -315,8 +550,12 @@ export function RegisterForm({
           placeholder="Ikeja"
           required
           value={formData.city}
+          className={cn(errors.city && "border-red-500 focus:ring-red-500")}
           onChange={(e) => handleInputChange('city', e.target.value)}
         />
+        {errors.city && (
+          <p className="text-sm text-red-500">{errors.city}</p>
+        )}
       </div>
       {showNIN && (
         <div className="grid gap-2">
@@ -330,11 +569,15 @@ export function RegisterForm({
             minLength={11}
             title="Please enter a valid 11-digit NIN number"
             value={formData.nin}
+            className={cn(errors.nin && "border-red-500 focus:ring-red-500")}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 11);
               handleInputChange('nin', value);
             }}
           />
+          {errors.nin && (
+            <p className="text-sm text-red-500">{errors.nin}</p>
+          )}
           <p className="text-xs text-muted-foreground">
             Your NIN is a unique 11-digit number assigned by NIMC
           </p>
@@ -344,14 +587,14 @@ export function RegisterForm({
         <Button 
           type="button" 
           variant="outline"
-          onClick={() => setStep(1)}
+          onClick={goToPreviousStep}
         >
           Back
         </Button>
         <Button 
           type="button" 
           className="flex-1 bg-blue-500 hover:bg-blue-600 w-full"
-          onClick={() => setStep(3)}
+          onClick={goToNextStep}
         >
           Continue
         </Button>
@@ -367,6 +610,7 @@ export function RegisterForm({
             isRequired
             isSelected={formData.consents.terms}
             onValueChange={(checked) => handleConsentChange('terms', checked)}
+            className={cn(errors.terms && "border-red-500")}
           >
             <div className="grid gap-1.5 leading-none">
               <span className="text-sm font-medium flex items-center">
@@ -378,12 +622,16 @@ export function RegisterForm({
               </p>
             </div>
           </Checkbox>
+          {errors.terms && (
+            <p className="text-sm text-red-500">{errors.terms}</p>
+          )}
         </div>
         <div className="flex items-start space-x-3">
           <Checkbox
             isRequired
             isSelected={formData.consents.hipaa}
             onValueChange={(checked) => handleConsentChange('hipaa', checked)}
+            className={cn(errors.hipaa && "border-red-500")}
           >
             <div className="grid gap-1.5 leading-none">
               <span className="text-sm font-medium flex items-center">
@@ -395,12 +643,16 @@ export function RegisterForm({
               </p>
             </div>
           </Checkbox>
+          {errors.hipaa && (
+            <p className="text-sm text-red-500">{errors.hipaa}</p>
+          )}
         </div>
         <div className="flex items-start space-x-3">
           <Checkbox
             isRequired
             isSelected={formData.consents.dataProcessing}
             onValueChange={(checked) => handleConsentChange('dataProcessing', checked)}
+            className={cn(errors.data_processing && "border-red-500")}
           >
             <div className="grid gap-1.5 leading-none">
               <span className="text-sm font-medium flex items-center">
@@ -412,6 +664,9 @@ export function RegisterForm({
               </p>
             </div>
           </Checkbox>
+          {errors.data_processing && (
+            <p className="text-sm text-red-500">{errors.data_processing}</p>
+          )}
         </div>
       </div>
       {!Object.values(formData.consents).every(Boolean) && (
@@ -423,7 +678,7 @@ export function RegisterForm({
         <Button 
           type="button" 
           variant="outline"
-          onClick={() => setStep(2)}
+          onClick={goToPreviousStep}
         >
           Back
         </Button>
@@ -458,6 +713,11 @@ export function RegisterForm({
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
+            {apiError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-4">
+                {apiError}
+              </div>
+            )}
             {step === 1 && renderStep1()}
             {step === 2 && renderStep2()}
             {step === 3 && renderStep3()}
